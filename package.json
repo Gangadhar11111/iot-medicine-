@@ -1,0 +1,35 @@
+{
+  "name": "medichain-iot-blockchain",
+  "version": "1.0.0",
+  "description": "IoT-Based Blockchain Medical Authentication System",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "compile": "npx hardhat compile",
+    "node": "npx hardhat node",
+    "deploy": "npx hardhat run scripts/deploy.js --network localhost",
+    "deploy:local": "npx hardhat run scripts/deploy.js --network localhost",
+    "deploy:sepolia": "npx hardhat run scripts/deploy.js --network sepolia",
+    "test": "npx hardhat test",
+    "setup": "npm run compile && echo 'Compiled! Now run: npm run node (in terminal 1) then npm run deploy (in terminal 2)'"
+  },
+  "keywords": [
+    "blockchain",
+    "iot",
+    "medicine",
+    "authentication",
+    "metamask",
+    "ethereum"
+  ],
+  "author": "MediChain",
+  "license": "MIT",
+  "dependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^6.1.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "ethers": "^6.16.0",
+    "express": "^5.2.1",
+    "hardhat": "^2.28.6"
+  }
+}

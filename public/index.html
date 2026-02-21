@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediChain — IoT Blockchain Medical Authentication</title>
+    <meta name="description"
+        content="Secure, decentralized IoT-based medical authentication system using blockchain to verify medicine authenticity and prevent counterfeit drugs.">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
+
+    <!-- QR Code Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <!-- Ethers.js for MetaMask / Blockchain -->
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.9.0/dist/ethers.umd.min.js"></script>
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-content">
+            <div class="loading-logo">
+                <div class="loading-icon">
+                    <svg viewBox="0 0 64 64" fill="none">
+                        <rect x="8" y="8" width="48" height="48" rx="12" stroke="url(#grad1)" stroke-width="3" />
+                        <path d="M20 32h24M32 20v24" stroke="url(#grad1)" stroke-width="3" stroke-linecap="round" />
+                        <circle cx="32" cy="32" r="6" fill="url(#grad1)" opacity="0.3" />
+                        <defs>
+                            <linearGradient id="grad1" x1="0" y1="0" x2="64" y2="64">
+                                <stop offset="0%" stop-color="#00d4ff" />
+                                <stop offset="100%" stop-color="#7c3aed" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <div class="loading-chain">
+                    <span class="chain-link"></span>
+                    <span class="chain-link"></span>
+                    <span class="chain-link"></span>
+                </div>
+            </div>
+            <h1 class="loading-title">MediChain</h1>
+            <p class="loading-subtitle">Initializing Blockchain Network...</p>
+            <div class="loading-bar">
+                <div class="loading-bar-fill"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- App Container -->
+    <div id="app" class="app hidden">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <svg viewBox="0 0 40 40" fill="none">
+                            <rect x="4" y="4" width="32" height="32" rx="8" stroke="url(#logoGrad)"
+                                stroke-width="2.5" />
+                            <path d="M13 20h14M20 13v14" stroke="url(#logoGrad)" stroke-width="2.5"
+                                stroke-linecap="round" />
+                            <defs>
+                                <linearGradient id="logoGrad" x1="0" y1="0" x2="40" y2="40">
+                                    <stop offset="0%" stop-color="#00d4ff" />
+                                    <stop offset="100%" stop-color="#7c3aed" />
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                    <div class="logo-text">
+                        <h2>MediChain</h2>
+                        <span class="logo-badge">Blockchain</span>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <span class="nav-section-title">Main</span>
+                    <a href="#" class="nav-link active" data-page="dashboard" id="nav-dashboard">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                            <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                            <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                            <rect x="14" y="14" width="7" height="7" rx="1.5" />
+                        </svg>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="#" class="nav-link" data-page="register" id="nav-register">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 5v14M5 12h14" />
+                            <circle cx="12" cy="12" r="10" />
+                        </svg>
+                        <span>Register Medicine</span>
+                    </a>
+                    <a href="#" class="nav-link" data-page="verify" id="nav-verify">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 12l2 2 4-4" />
+                            <rect x="3" y="3" width="18" height="18" rx="4" />
+                        </svg>
+                        <span>Verify Medicine</span>
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <span class="nav-section-title">Supply Chain</span>
+                    <a href="#" class="nav-link" data-page="supplychain" id="nav-supplychain">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 12h16M4 6h16M4 18h16" />
+                            <circle cx="8" cy="6" r="2" fill="currentColor" />
+                            <circle cx="16" cy="12" r="2" fill="currentColor" />
+                            <circle cx="10" cy="18" r="2" fill="currentColor" />
+                        </svg>
+                        <span>Supply Chain</span>
+                    </a>
+                    <a href="#" class="nav-link" data-page="transactions" id="nav-transactions">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 7l6-4 6 4 6-4v14l-6 4-6-4-6 4z" />
+                        </svg>
+                        <span>Transactions</span>
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <span class="nav-section-title">Tools</span>
+                    <a href="#" class="nav-link" data-page="scanner" id="nav-scanner">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path
+                                d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2" />
+                            <line x1="7" y1="12" x2="17" y2="12" />
+                        </svg>
+                        <span>QR Scanner</span>
+                        <span class="nav-badge">IoT</span>
+                    </a>
+                    <a href="#" class="nav-link" data-page="alerts" id="nav-alerts">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" />
+                        </svg>
+                        <span>Alerts</span>
+                        <span class="nav-badge alert-badge" id="alert-count">0</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="network-status">
+                    <div class="status-dot online"></div>
+                    <div class="status-info">
+                        <span class="status-label">Network Status</span>
+                        <span class="status-value">Connected</span>
+                    </div>
+                </div>
+                <div class="block-info">
+                    <span>Block #<span id="block-number">0</span></span>
+                    <span class="block-hash" id="last-hash">0x000...000</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="topbar">
+                <button class="sidebar-toggle" id="sidebar-toggle">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="6" x2="21" y2="6" />
+                        <line x1="3" y1="12" x2="21" y2="12" />
+                        <line x1="3" y1="18" x2="21" y2="18" />
+                    </svg>
+                </button>
+                <div class="topbar-left">
+                    <h1 class="page-title" id="page-title">Dashboard</h1>
+                    <div class="breadcrumb">
+                        <span>MediChain</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14"
+                            height="14">
+                            <path d="M9 18l6-6-6-6" />
+                        </svg>
+                        <span id="breadcrumb-current">Dashboard</span>
+                    </div>
+                </div>
+                <div class="topbar-right">
+                    <div class="search-bar">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8" />
+                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        </svg>
+                        <input type="text" placeholder="Search medicines, batches..." id="global-search">
+                    </div>
+                    <div class="topbar-actions">
+                        <button class="btn btn-metamask" id="connect-wallet-btn" title="Connect MetaMask">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                <path d="M9 12l2 2 4-4" />
+                            </svg>
+                            <span id="wallet-btn-text">Connect Wallet</span>
+                        </button>
+                        <button class="icon-btn" id="theme-toggle" title="Toggle Theme">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="5" />
+                                <path
+                                    d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                            </svg>
+                        </button>
+                        <button class="icon-btn notification-btn" id="notification-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                                <path d="M13.73 21a2 2 0 01-3.46 0" />
+                            </svg>
+                            <span class="notification-dot" id="notification-dot"></span>
+                        </button>
+                        <div class="user-profile" id="user-profile">
+                            <div class="user-avatar" id="wallet-avatar">
+                                <span id="wallet-avatar-letter">?</span>
+                            </div>
+                            <div class="user-info">
+                                <span class="user-name" id="wallet-display">Not Connected</span>
+                                <span class="user-role" id="wallet-role">Connect MetaMask</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Container -->
+            <div class="page-container">
+                <!-- Dashboard Page -->
+                <section id="page-dashboard" class="page active">
+                    <div class="stats-grid">
+                        <div class="stat-card" id="stat-total">
+                            <div class="stat-icon blue">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 7l-8 4-8-4 8-4 8 4z" />
+                                    <path d="M4 11l8 4 8-4" />
+                                    <path d="M4 15l8 4 8-4" />
+                                </svg>
+                            </div>
+                            <div class="stat-details">
+                                <span class="stat-value" id="total-medicines">0</span>
+                                <span class="stat-label">Total Medicines</span>
+                            </div>
+                            <div class="stat-trend up">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16"
+                                    height="16">
+                                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                                </svg>
+                                <span>+12%</span>
+                            </div>
+                        </div>
+                        <div class="stat-card" id="stat-verified">
+                            <div class="stat-icon green">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+                                    <path d="M22 4L12 14.01l-3-3" />
+                                </svg>
+                            </div>
+                            <div class="stat-details">
+                                <span class="stat-value" id="verified-count">0</span>
+                                <span class="stat-label">Verified Authentic</span>
+                            </div>
+                            <div class="stat-trend up">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16"
+                                    height="16">
+                                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                                </svg>
+                                <span>+8%</span>
+                            </div>
+                        </div>
+                        <div class="stat-card" id="stat-flagged">
+                            <div class="stat-icon red">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path
+                                        d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                                    <line x1="12" y1="9" x2="12" y2="13" />
+                                    <line x1="12" y1="17" x2="12" y2="17" />
+                                </svg>
+                            </div>
+                            <div class="stat-details">
+                                <span class="stat-value" id="flagged-count">0</span>
+                                <span class="stat-label">Counterfeit Alerts</span>
+                            </div>
+                            <div class="stat-trend down">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16"
+                                    height="16">
+                                    <polyline points="23 18 13.5 8.5 8.5 13.5 1 6" />
+                                </svg>
+                                <span>-3%</span>
+                            </div>
+                        </div>
+                        <div class="stat-card" id="stat-blocks">
+                            <div class="stat-icon purple">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="2" y="2" width="20" height="20" rx="4" />
+                                    <path d="M7 7h10v10H7z" />
+                                    <path d="M12 2v5M12 17v5M2 12h5M17 12h5" />
+                                </svg>
+                            </div>
+                            <div class="stat-details">
+                                <span class="stat-value" id="block-count">1</span>
+                                <span class="stat-label">Blockchain Blocks</span>
+                            </div>
+                            <div class="stat-trend up">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16"
+                                    height="16">
+                                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                                </svg>
+                                <span>Active</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-grid">
+                        <div class="card chart-card">
+                            <div class="card-header">
+                                <h3>Verification Activity</h3>
+                                <div class="card-actions">
+                                    <button class="chip active" data-range="7d">7D</button>
+                                    <button class="chip" data-range="30d">30D</button>
+                                    <button class="chip" data-range="90d">90D</button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="activity-chart"></canvas>
+                            </div>
+                        </div>
+                        <div class="card recent-card">
+                            <div class="card-header">
+                                <h3>Recent Transactions</h3>
+                                <a href="#" class="view-all" data-page="transactions">View All</a>
+                            </div>
+                            <div class="card-body">
+                                <div class="transaction-list" id="recent-transactions">
+                                    <div class="empty-state mini">
+                                        <p>No transactions yet. Register a medicine to get started.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-grid">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Supply Chain Distribution</h3>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="distribution-chart"></canvas>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Blockchain Health</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="blockchain-visual" id="blockchain-visual">
+                                    <div class="genesis-block">
+                                        <div class="block-node genesis">
+                                            <span class="block-label">Genesis</span>
+                                            <span class="block-hash-mini">0x000...000</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="chain-stats">
+                                    <div class="chain-stat">
+                                        <span class="chain-stat-value" id="chain-integrity">100%</span>
+                                        <span class="chain-stat-label">Chain Integrity</span>
+                                    </div>
+                                    <div class="chain-stat">
+                                        <span class="chain-stat-value" id="total-txns">0</span>
+                                        <span class="chain-stat-label">Total Transactions</span>
+                                    </div>
+                                    <div class="chain-stat">
+                                        <span class="chain-stat-value" id="avg-block-time">~3s</span>
+                                        <span class="chain-stat-label">Avg Block Time</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Register Medicine Page -->
+                <section id="page-register" class="page">
+                    <div class="page-header">
+                        <div>
+                            <h2>Register New Medicine</h2>
+                            <p>Add medicine to the blockchain with a unique QR code for authentication</p>
+                        </div>
+                    </div>
+                    <div class="register-grid">
+                        <div class="card register-form-card">
+                            <div class="card-header">
+                                <h3>Medicine Details</h3>
+                                <span class="badge badge-info">Step 1 of 2</span>
+                            </div>
+                            <div class="card-body">
+                                <form id="register-form">
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="medicine-name">Medicine Name <span
+                                                    class="required">*</span></label>
+                                            <input type="text" id="medicine-name" placeholder="e.g., Paracetamol 500mg"
+                                                required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="batch-number">Batch Number <span
+                                                    class="required">*</span></label>
+                                            <input type="text" id="batch-number" placeholder="e.g., BATCH-2026-001"
+                                                required>
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="manufacturer-id">Manufacturer ID <span
+                                                    class="required">*</span></label>
+                                            <input type="text" id="manufacturer-id" placeholder="e.g., MFG-PHARMA-001"
+                                                required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="manufacturer-name">Manufacturer Name <span
+                                                    class="required">*</span></label>
+                                            <input type="text" id="manufacturer-name"
+                                                placeholder="e.g., PharmaCorp Ltd." required>
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="mfg-date">Manufacturing Date <span
+                                                    class="required">*</span></label>
+                                            <input type="date" id="mfg-date" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="exp-date">Expiry Date <span class="required">*</span></label>
+                                            <input type="date" id="exp-date" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="medicine-type">Medicine Type</label>
+                                            <select id="medicine-type">
+                                                <option value="tablet">Tablet</option>
+                                                <option value="capsule">Capsule</option>
+                                                <option value="syrup">Syrup</option>
+                                                <option value="injection">Injection</option>
+                                                <option value="ointment">Ointment</option>
+                                                <option value="drops">Drops</option>
+                                                <option value="inhaler">Inhaler</option>
+                                                <option value="other">Other</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="quantity">Quantity in Pack</label>
+                                            <input type="number" id="quantity" placeholder="e.g., 10" min="1">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="composition">Composition / Ingredients</label>
+                                        <textarea id="composition" rows="3"
+                                            placeholder="e.g., Paracetamol IP 500mg, Excipients q.s."></textarea>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="shipment-dest">Shipment Destination</label>
+                                            <input type="text" id="shipment-dest"
+                                                placeholder="e.g., City Medical Store, Mumbai">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="price">MRP (₹)</label>
+                                            <input type="number" id="price" placeholder="e.g., 50.00" step="0.01"
+                                                min="0">
+                                        </div>
+                                    </div>
+                                    <div class="form-actions">
+                                        <button type="button" class="btn btn-outline" id="reset-form">Reset
+                                            Form</button>
+                                        <button type="submit" class="btn btn-primary" id="register-btn">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                width="18" height="18">
+                                                <rect x="2" y="2" width="20" height="20" rx="4" />
+                                                <path d="M7 7h10v10H7z" />
+                                                <path d="M12 2v5M12 17v5M2 12h5M17 12h5" />
+                                            </svg>
+                                            Register on Blockchain
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="card qr-preview-card">
+                            <div class="card-header">
+                                <h3>QR Code Preview</h3>
+                                <span class="badge badge-info">Step 2 of 2</span>
+                            </div>
+                            <div class="card-body qr-preview-body">
+                                <div class="qr-placeholder" id="qr-placeholder">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                                        width="64" height="64" opacity="0.3">
+                                        <path
+                                            d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2" />
+                                        <rect x="7" y="7" width="4" height="4" rx="0.5" />
+                                        <rect x="13" y="7" width="4" height="4" rx="0.5" />
+                                        <rect x="7" y="13" width="4" height="4" rx="0.5" />
+                                        <rect x="13" y="13" width="4" height="4" rx="0.5" />
+                                    </svg>
+                                    <p>Fill in the form and register to generate QR code</p>
+                                </div>
+                                <div class="qr-result hidden" id="qr-result">
+                                    <canvas id="qr-canvas"></canvas>
+                                    <div class="qr-info">
+                                        <span class="qr-medicine-name" id="qr-med-name"></span>
+                                        <span class="qr-batch" id="qr-batch-id"></span>
+                                    </div>
+                                    <div class="qr-actions">
+                                        <button class="btn btn-sm btn-outline" id="download-qr">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                width="16" height="16">
+                                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                                                <polyline points="7 10 12 15 17 10" />
+                                                <line x1="12" y1="15" x2="12" y2="3" />
+                                            </svg>
+                                            Download QR
+                                        </button>
+                                        <button class="btn btn-sm btn-primary" id="print-qr">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                width="16" height="16">
+                                                <path
+                                                    d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" />
+                                                <rect x="6" y="14" width="12" height="8" />
+                                            </svg>
+                                            Print
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="registration-details hidden" id="registration-details">
+                                    <h4>Blockchain Record</h4>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Transaction Hash</span>
+                                        <span class="detail-value hash" id="tx-hash"></span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Block Number</span>
+                                        <span class="detail-value" id="reg-block"></span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Timestamp</span>
+                                        <span class="detail-value" id="reg-timestamp"></span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Status</span>
+                                        <span class="detail-value status-confirmed">Confirmed ✓</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Verify Medicine Page -->
+                <section id="page-verify" class="page">
+                    <div class="page-header">
+                        <div>
+                            <h2>Verify Medicine Authenticity</h2>
+                            <p>Scan QR code or enter batch number to verify medicine on blockchain</p>
+                        </div>
+                    </div>
+                    <div class="verify-grid">
+                        <div class="card verify-input-card">
+                            <div class="card-header">
+                                <h3>Verification Method</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="verify-tabs">
+                                    <button class="verify-tab active" data-tab="manual" id="tab-manual">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            width="20" height="20">
+                                            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                                            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                        </svg>
+                                        Manual Entry
+                                    </button>
+                                    <button class="verify-tab" data-tab="qrscan" id="tab-qrscan">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            width="20" height="20">
+                                            <path
+                                                d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2" />
+                                            <line x1="7" y1="12" x2="17" y2="12" />
+                                        </svg>
+                                        QR Scanner
+                                        <span class="nav-badge">Camera</span>
+                                    </button>
+                                </div>
+                                <div class="verify-content">
+                                    <div class="verify-panel active" id="panel-manual">
+                                        <div class="form-group">
+                                            <label for="verify-batch">Batch Number</label>
+                                            <input type="text" id="verify-batch"
+                                                placeholder="Enter batch number (e.g., BATCH-2026-001)">
+                                        </div>
+                                        <button class="btn btn-primary btn-full" id="verify-manual-btn">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                width="18" height="18">
+                                                <circle cx="11" cy="11" r="8" />
+                                                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                                            </svg>
+                                            Verify on Blockchain
+                                        </button>
+                                    </div>
+                                    <div class="verify-panel" id="panel-qrscan">
+                                        <div class="scanner-container">
+                                            <div id="qr-reader" class="qr-reader"></div>
+                                            <div class="scanner-status" id="scanner-status">
+                                                <div class="scanner-pulse"></div>
+                                                <span>Click "Start Scanner" to activate camera</span>
+                                            </div>
+                                        </div>
+                                        <div class="scanner-controls">
+                                            <button class="btn btn-primary" id="start-scanner-btn">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2" width="18" height="18">
+                                                    <polygon points="5 3 19 12 5 21 5 3" />
+                                                </svg>
+                                                Start Scanner
+                                            </button>
+                                            <button class="btn btn-outline" id="stop-scanner-btn" disabled>
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2" width="18" height="18">
+                                                    <rect x="6" y="4" width="4" height="16" />
+                                                    <rect x="14" y="4" width="4" height="16" />
+                                                </svg>
+                                                Stop Scanner
+                                            </button>
+                                        </div>
+                                        <p class="scanner-hint">Position the QR code within the camera frame. The
+                                            scanner uses your laptop's built-in camera. Future IoT integration will
+                                            support external QR controller devices.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card verify-result-card">
+                            <div class="card-header">
+                                <h3>Verification Result</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="verify-result-placeholder" id="verify-placeholder">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                                        width="64" height="64" opacity="0.3">
+                                        <path d="M9 12l2 2 4-4" />
+                                        <circle cx="12" cy="12" r="10" />
+                                    </svg>
+                                    <p>Scan or enter batch number to see verification results</p>
+                                </div>
+                                <div class="verify-result hidden" id="verify-success">
+                                    <div class="result-banner authentic">
+                                        <div class="result-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                stroke-width="2.5">
+                                                <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+                                                <path d="M22 4L12 14.01l-3-3" />
+                                            </svg>
+                                        </div>
+                                        <h3>Medicine is Authentic</h3>
+                                        <p>Verified on blockchain — All checks passed</p>
+                                    </div>
+                                    <div class="verification-checks" id="verification-checks">
+                                    </div>
+                                    <div class="medicine-details" id="verified-medicine-details">
+                                    </div>
+                                </div>
+                                <div class="verify-result hidden" id="verify-fail">
+                                    <div class="result-banner counterfeit">
+                                        <div class="result-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                stroke-width="2.5">
+                                                <path
+                                                    d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                                                <line x1="12" y1="9" x2="12" y2="13" />
+                                                <line x1="12" y1="17" x2="12.01" y2="17" />
+                                            </svg>
+                                        </div>
+                                        <h3>Warning: Possible Counterfeit Medicine</h3>
+                                        <p id="fail-reason">Record not found on blockchain</p>
+                                    </div>
+                                    <div class="alert-actions">
+                                        <button class="btn btn-danger" id="report-counterfeit">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                width="18" height="18">
+                                                <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+                                                <line x1="4" y1="22" x2="4" y2="15" />
+                                            </svg>
+                                            Report Counterfeit
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Supply Chain Page -->
+                <section id="page-supplychain" class="page">
+                    <div class="page-header">
+                        <div>
+                            <h2>Supply Chain Tracking</h2>
+                            <p>Track medicine journey from manufacturer to medical shop</p>
+                        </div>
+                    </div>
+                    <div class="supply-chain-content">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Track Medicine</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-row" style="max-width:600px;">
+                                    <div class="form-group" style="flex:1;">
+                                        <input type="text" id="track-batch" placeholder="Enter Batch Number to track">
+                                    </div>
+                                    <button class="btn btn-primary" id="track-btn">Track</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card" id="supply-chain-result" style="display:none;">
+                            <div class="card-header">
+                                <h3>Supply Chain Journey</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="timeline" id="supply-timeline"></div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Registered Medicines Inventory</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-container">
+                                    <table class="data-table" id="inventory-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Batch #</th>
+                                                <th>Medicine</th>
+                                                <th>Manufacturer</th>
+                                                <th>Mfg Date</th>
+                                                <th>Exp Date</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="inventory-body"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Transactions Page -->
+                <section id="page-transactions" class="page">
+                    <div class="page-header">
+                        <div>
+                            <h2>Transaction Ledger</h2>
+                            <p>Complete audit trail of all blockchain transactions</p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>All Transactions</h3>
+                            <div class="card-actions">
+                                <select id="tx-filter" class="filter-select">
+                                    <option value="all">All Types</option>
+                                    <option value="registration">Registrations</option>
+                                    <option value="verification">Verifications</option>
+                                    <option value="transfer">Transfers</option>
+                                    <option value="alert">Alerts</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-container">
+                                <table class="data-table" id="transaction-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Tx Hash</th>
+                                            <th>Type</th>
+                                            <th>Batch #</th>
+                                            <th>From</th>
+                                            <th>Block</th>
+                                            <th>Timestamp</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="transaction-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- QR Scanner Page (Standalone) -->
+                <section id="page-scanner" class="page">
+                    <div class="page-header">
+                        <div>
+                            <h2>IoT QR Scanner</h2>
+                            <p>Real-time QR code scanning using laptop camera (IoT controller ready)</p>
+                        </div>
+                        <div class="iot-badge">
+                            <div class="iot-pulse"></div>
+                            <span>IoT Mode: Camera</span>
+                        </div>
+                    </div>
+                    <div class="scanner-page-grid">
+                        <div class="card scanner-main-card">
+                            <div class="card-header">
+                                <h3>Camera Feed</h3>
+                                <div class="camera-indicator">
+                                    <div class="cam-dot" id="cam-dot"></div>
+                                    <span id="cam-status-text">Inactive</span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="scanner-viewport">
+                                    <div id="scanner-reader" class="scanner-reader"></div>
+                                    <div class="scanner-overlay" id="scanner-overlay">
+                                        <div class="scan-frame">
+                                            <div class="scan-corner tl"></div>
+                                            <div class="scan-corner tr"></div>
+                                            <div class="scan-corner bl"></div>
+                                            <div class="scan-corner br"></div>
+                                            <div class="scan-line"></div>
+                                        </div>
+                                        <p class="scan-instruction">Position QR code within frame</p>
+                                    </div>
+                                </div>
+                                <div class="scanner-page-controls">
+                                    <button class="btn btn-primary btn-lg" id="scanner-start">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            width="20" height="20">
+                                            <polygon points="5 3 19 12 5 21 5 3" />
+                                        </svg>
+                                        Start Camera
+                                    </button>
+                                    <button class="btn btn-outline btn-lg" id="scanner-stop" disabled>
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            width="20" height="20">
+                                            <rect x="6" y="4" width="4" height="16" />
+                                            <rect x="14" y="4" width="4" height="16" />
+                                        </svg>
+                                        Stop Camera
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card scanner-history-card">
+                            <div class="card-header">
+                                <h3>Scan History</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="scan-history-list" id="scan-history">
+                                    <div class="empty-state mini">
+                                        <p>No scans yet. Start scanning QR codes to see results here.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Alerts Page -->
+                <section id="page-alerts" class="page">
+                    <div class="page-header">
+                        <div>
+                            <h2>Alert Center</h2>
+                            <p>Counterfeit medicine alerts and system notifications</p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Active Alerts</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="alerts-list" id="alerts-list">
+                                <div class="empty-state mini">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                                        width="48" height="48" opacity="0.3">
+                                        <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+                                        <path d="M22 4L12 14.01l-3-3" />
+                                    </svg>
+                                    <p>No alerts. All medicines verified successfully.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Modal -->
+    <div class="modal-overlay hidden" id="modal-overlay">
+        <div class="modal" id="modal">
+            <div class="modal-header">
+                <h3 id="modal-title"></h3>
+                <button class="modal-close" id="modal-close">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body"></div>
+        </div>
+    </div>
+
+    <script src="blockchain.js"></script>
+    <script src="metamask.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
