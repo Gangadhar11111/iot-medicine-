@@ -1206,8 +1206,23 @@ button {
 
 .qr-reader {
     width: 100%;
+    min-height: 300px;
     border-radius: var(--radius-md);
     overflow: hidden;
+    background: var(--bg-input);
+    border: 2px solid var(--border);
+}
+
+.qr-reader video {
+    width: 100% !important;
+    height: auto !important;
+    border-radius: var(--radius-md);
+}
+
+.scanner-reader video {
+    width: 100% !important;
+    height: auto !important;
+    border-radius: var(--radius-md);
 }
 
 .scanner-status {
@@ -2030,4 +2045,166 @@ button {
     to {
         transform: rotate(360deg);
     }
+}
+
+/* ===== QR Upload Zone ===== */
+.qr-upload-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    min-height: 300px;
+    border: 2px dashed var(--border-light);
+    border-radius: var(--radius-lg);
+    background: rgba(15, 20, 37, 0.5);
+    transition: var(--transition);
+    cursor: pointer;
+    text-align: center;
+    gap: 16px;
+    position: relative;
+}
+
+.qr-upload-zone:hover,
+.qr-upload-zone.drag-over {
+    border-color: var(--accent-blue);
+    background: rgba(0, 212, 255, 0.04);
+    box-shadow: var(--shadow-glow-blue);
+}
+
+.qr-upload-zone.drag-over {
+    transform: scale(1.01);
+    border-color: var(--accent-purple);
+    background: rgba(124, 58, 237, 0.06);
+    box-shadow: var(--shadow-glow-purple);
+}
+
+.qr-upload-zone .upload-icon {
+    color: var(--accent-blue);
+    opacity: 0.6;
+    transition: var(--transition);
+}
+
+.qr-upload-zone:hover .upload-icon,
+.qr-upload-zone.drag-over .upload-icon {
+    opacity: 1;
+    transform: translateY(-4px);
+}
+
+.qr-upload-zone h4 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.qr-upload-zone p {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.upload-file-input {
+    display: none !important;
+}
+
+.upload-formats {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+/* Upload Preview */
+.upload-preview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 24px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: rgba(15, 20, 37, 0.5);
+    animation: fadeIn 0.3s ease;
+}
+
+.upload-preview img {
+    max-width: 260px;
+    max-height: 260px;
+    border-radius: var(--radius-md);
+    border: 2px solid var(--border-light);
+    box-shadow: var(--shadow-md);
+    object-fit: contain;
+    background: white;
+    padding: 8px;
+}
+
+.upload-preview-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+/* Upload Result */
+.upload-result {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 24px;
+    border-radius: var(--radius-lg);
+    background: rgba(16, 185, 129, 0.06);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    animation: fadeIn 0.3s ease;
+    text-align: center;
+}
+
+.upload-result .upload-result-icon {
+    color: var(--accent-green);
+    animation: pulse 1.5s infinite;
+}
+
+.upload-result #verify-upload-result-text {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-family: 'JetBrains Mono', monospace;
+    word-break: break-all;
+    max-width: 100%;
+}
+
+/* Scanner Page Upload Button */
+.upload-qr-label {
+    cursor: pointer;
+    position: relative;
+}
+
+.upload-qr-label input[type="file"] {
+    display: none !important;
+}
+
+/* Scanning animation overlay */
+.upload-scanning-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(10, 14, 26, 0.85);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    border-radius: var(--radius-lg);
+    z-index: 10;
+    animation: fadeIn 0.2s ease;
+}
+
+.upload-scanning-overlay .scan-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(0, 212, 255, 0.2);
+    border-top-color: var(--accent-blue);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+.upload-scanning-overlay span {
+    color: var(--accent-blue);
+    font-size: 0.9rem;
+    font-weight: 500;
 }

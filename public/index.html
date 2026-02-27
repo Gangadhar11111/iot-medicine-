@@ -600,6 +600,16 @@
                                         QR Scanner
                                         <span class="nav-badge">Camera</span>
                                     </button>
+                                    <button class="verify-tab" data-tab="qrupload" id="tab-qrupload">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            width="20" height="20">
+                                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                                            <polyline points="17 8 12 3 7 8" />
+                                            <line x1="12" y1="3" x2="12" y2="15" />
+                                        </svg>
+                                        Upload QR
+                                        <span class="nav-badge">Image</span>
+                                    </button>
                                 </div>
                                 <div class="verify-content">
                                     <div class="verify-panel active" id="panel-manual">
@@ -645,6 +655,59 @@
                                         <p class="scanner-hint">Position the QR code within the camera frame. The
                                             scanner uses your laptop's built-in camera. Future IoT integration will
                                             support external QR controller devices.</p>
+                                    </div>
+                                    <div class="verify-panel" id="panel-qrupload">
+                                        <div class="qr-upload-zone" id="verify-upload-zone">
+                                            <div class="upload-icon">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="1.5" width="56" height="56">
+                                                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                                                    <polyline points="17 8 12 3 7 8" />
+                                                    <line x1="12" y1="3" x2="12" y2="15" />
+                                                </svg>
+                                            </div>
+                                            <h4>Upload QR Code Image</h4>
+                                            <p>Drag & drop a QR code image here, or click to browse</p>
+                                            <input type="file" accept="image/*" id="verify-qr-file-input"
+                                                class="upload-file-input" />
+                                            <label for="verify-qr-file-input" class="btn btn-primary">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2" width="18" height="18">
+                                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                                    <circle cx="8.5" cy="8.5" r="1.5" />
+                                                    <polyline points="21 15 16 10 5 21" />
+                                                </svg>
+                                                Choose Image
+                                            </label>
+                                            <span class="upload-formats">Supports PNG, JPG, JPEG, BMP, GIF</span>
+                                        </div>
+                                        <div class="upload-preview hidden" id="verify-upload-preview">
+                                            <img id="verify-preview-img" alt="QR Preview" />
+                                            <div class="upload-preview-actions">
+                                                <button class="btn btn-primary" id="verify-scan-uploaded">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                        stroke-width="2" width="18" height="18">
+                                                        <path
+                                                            d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2" />
+                                                        <line x1="7" y1="12" x2="17" y2="12" />
+                                                    </svg>
+                                                    Scan This QR Code
+                                                </button>
+                                                <button class="btn btn-outline" id="verify-clear-upload">
+                                                    Clear
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="upload-result hidden" id="verify-upload-result">
+                                            <div class="upload-result-icon">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2" width="32" height="32">
+                                                    <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+                                                    <path d="M22 4L12 14.01l-3-3" />
+                                                </svg>
+                                            </div>
+                                            <span id="verify-upload-result-text"></span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -858,6 +921,17 @@
                                         </svg>
                                         Stop Camera
                                     </button>
+                                    <label class="btn btn-outline btn-lg upload-qr-label" for="scanner-qr-file-input">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            width="20" height="20">
+                                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                                            <polyline points="17 8 12 3 7 8" />
+                                            <line x1="12" y1="3" x2="12" y2="15" />
+                                        </svg>
+                                        Upload QR Image
+                                        <input type="file" accept="image/*" id="scanner-qr-file-input"
+                                            class="upload-file-input" />
+                                    </label>
                                 </div>
                             </div>
                         </div>

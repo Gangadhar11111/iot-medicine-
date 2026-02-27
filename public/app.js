@@ -163,6 +163,204 @@
 
         // Notification btn
         document.getElementById('notification-btn').addEventListener('click', () => navigateTo('alerts'));
+
+        // === Upload QR Tab (Verify Page) ===
+        setupUploadQRListeners();
+    }
+
+    function setupUploadQRListeners() {
+        // --- Verify page: Upload QR file input ---
+        const verifyFileInput = document.getElementById('verify-qr-file-input');
+        if (verifyFileInput) {
+            verifyFileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                showUploadPreview(file);
+            });
+        }
+
+        // --- Verify page: Drag & Drop ---
+        const uploadZone = document.getElementById('verify-upload-zone');
+        if (uploadZone) {
+            ['dragenter', 'dragover'].forEach(evt => {
+                uploadZone.addEventListener(evt, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    uploadZone.classList.add('drag-over');
+                });
+            });
+            ['dragleave', 'drop'].forEach(evt => {
+                uploadZone.addEventListener(evt, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    uploadZone.classList.remove('drag-over');
+                });
+            });
+            uploadZone.addEventListener('drop', (e) => {
+                const file = e.dataTransfer.files[0];
+                if (file && file.type.startsWith('image/')) {
+                    showUploadPreview(file);
+                } else {
+                    showToast('Please drop a valid image file.', 'error');
+                }
+            });
+            // Also allow clicking the zone to trigger file input
+            uploadZone.addEventListener('click', (e) => {
+                if (e.target.closest('.btn')) return; // Don't double-trigger on button click
+                if (verifyFileInput) verifyFileInput.click();
+            });
+        }
+
+        // --- Scan uploaded QR button ---
+        const scanUploadedBtn = document.getElementById('verify-scan-uploaded');
+        if (scanUploadedBtn) {
+            scanUploadedBtn.addEventListener('click', () => {
+                scanUploadedQRImage();
+            });
+        }
+
+        // --- Clear upload button ---
+        const clearUploadBtn = document.getElementById('verify-clear-upload');
+        if (clearUploadBtn) {
+            clearUploadBtn.addEventListener('click', () => {
+                clearUploadPreview();
+            });
+        }
+
+        // --- Scanner page: Upload QR file input ---
+        const scannerFileInput = document.getElementById('scanner-qr-file-input');
+        if (scannerFileInput) {
+            scannerFileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                scanQRFromFile(file, 'scanner-reader');
+            });
+        }
+    }
+
+    // Show preview of uploaded QR image (verify page)
+    let _uploadedFile = null;
+    function showUploadPreview(file) {
+        _uploadedFile = file;
+        const zone = document.getElementById('verify-upload-zone');
+        const preview = document.getElementById('verify-upload-preview');
+        const previewImg = document.getElementById('verify-preview-img');
+        const result = document.getElementById('verify-upload-result');
+
+        // Read image and show preview
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            previewImg.src = e.target.result;
+            zone.classList.add('hidden');
+            preview.classList.remove('hidden');
+            if (result) result.classList.add('hidden');
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function clearUploadPreview() {
+        _uploadedFile = null;
+        const zone = document.getElementById('verify-upload-zone');
+        const preview = document.getElementById('verify-upload-preview');
+        const result = document.getElementById('verify-upload-result');
+        const fileInput = document.getElementById('verify-qr-file-input');
+
+        zone.classList.remove('hidden');
+        preview.classList.add('hidden');
+        if (result) result.classList.add('hidden');
+        if (fileInput) fileInput.value = '';
+    }
+
+    // Scan the uploaded QR image (verify page)
+    async function scanUploadedQRImage() {
+        if (!_uploadedFile) {
+            showToast('No image to scan. Please upload a QR code image.', 'error');
+            return;
+        }
+
+        const preview = document.getElementById('verify-upload-preview');
+        const result = document.getElementById('verify-upload-result');
+        const resultText = document.getElementById('verify-upload-result-text');
+
+        // Show scanning animation
+        const scanningOverlay = document.createElement('div');
+        scanningOverlay.className = 'upload-scanning-overlay';
+        scanningOverlay.innerHTML = '<div class="scan-spinner"></div><span>Scanning QR Code...</span>';
+        preview.style.position = 'relative';
+        preview.appendChild(scanningOverlay);
+
+        try {
+            // Create temp div for scanner
+            let tempDiv = document.getElementById('_temp_qr_upload');
+            if (!tempDiv) {
+                tempDiv = document.createElement('div');
+                tempDiv.id = '_temp_qr_upload';
+                tempDiv.style.display = 'none';
+                document.body.appendChild(tempDiv);
+            }
+
+            const tempScanner = new Html5Qrcode('_temp_qr_upload');
+            const decoded = await tempScanner.scanFile(_uploadedFile, true);
+
+            // Remove scanning overlay
+            scanningOverlay.remove();
+
+            // Show result
+            if (result) {
+                resultText.textContent = 'QR Data: ' + decoded;
+                result.classList.remove('hidden');
+            }
+
+            showToast('✅ QR code detected from image!', 'success');
+
+            // Process the scanned data
+            handleQRData(decoded);
+
+            // Clean up
+            tempScanner.clear();
+            tempDiv.remove();
+        } catch (err) {
+            scanningOverlay.remove();
+            console.error('Upload QR scan failed:', err);
+            showToast('❌ Could not read QR code from image. Try a clearer image.', 'error');
+        }
+    }
+
+    // Scan QR from file (used by scanner page upload button)
+    async function scanQRFromFile(file, containerId) {
+        showToast('📷 Processing QR code image...', 'info');
+
+        try {
+            let tempDiv = document.getElementById('_temp_qr_upload');
+            if (!tempDiv) {
+                tempDiv = document.createElement('div');
+                tempDiv.id = '_temp_qr_upload';
+                tempDiv.style.display = 'none';
+                document.body.appendChild(tempDiv);
+            }
+
+            const tempScanner = new Html5Qrcode('_temp_qr_upload');
+            const decoded = await tempScanner.scanFile(file, true);
+
+            showToast('✅ QR code detected!', 'success');
+            handleQRData(decoded);
+
+            // Add to scan history if on scanner page
+            if (containerId === 'scanner-reader') {
+                addToScanHistory(decoded);
+            }
+
+            // Clean up
+            tempScanner.clear();
+            tempDiv.remove();
+        } catch (err) {
+            console.error('QR file scan failed:', err);
+            showToast('❌ Could not read QR code from image. Try a clearer image.', 'error');
+        }
+
+        // Reset the file input
+        const scannerFileInput = document.getElementById('scanner-qr-file-input');
+        if (scannerFileInput) scannerFileInput.value = '';
     }
 
     // ===== Blockchain Event Listeners (local) =====
@@ -412,6 +610,9 @@
     }
 
     // ===== QR Scanning =====
+    let lastScannedCode = '';
+    let lastScanTime = 0;
+
     async function startVerifyScanner() {
         try {
             if (typeof Html5Qrcode === 'undefined') {
@@ -420,31 +621,44 @@
             }
             const reader = document.getElementById('qr-reader');
             reader.innerHTML = '';
+            // Ensure the reader has a visible height for the camera
+            reader.style.minHeight = '300px';
             document.getElementById('scanner-status').style.display = 'none';
+
+            // Dispose previous instance if any
+            if (html5QrCode) {
+                try { await html5QrCode.stop(); } catch (e) { }
+                html5QrCode = null;
+            }
+
             html5QrCode = new Html5Qrcode('qr-reader');
 
-            // Try multiple camera options
             let started = false;
-            const cameraConfigs = [
-                { facingMode: 'environment' },  // Back camera (mobile)
-                { facingMode: 'user' },          // Front camera (laptop)
-            ];
+            const scannerConfig = { fps: 15, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
+
+            const onScanSuccess = async (decodedText) => {
+                // Debounce: ignore same code within 3 seconds
+                const now = Date.now();
+                if (decodedText === lastScannedCode && now - lastScanTime < 3000) return;
+                lastScannedCode = decodedText;
+                lastScanTime = now;
+                await stopVerifyScanner();
+                handleQRData(decodedText);
+            };
 
             // First try to get available cameras
             try {
                 const devices = await Html5Qrcode.getCameras();
+                console.log('Available cameras:', devices);
                 if (devices && devices.length > 0) {
-                    // Use first available camera
                     await html5QrCode.start(
                         devices[0].id,
-                        { fps: 10, qrbox: { width: 250, height: 250 } },
-                        async (decodedText) => {
-                            await stopVerifyScanner();
-                            handleQRData(decodedText);
-                        },
+                        scannerConfig,
+                        onScanSuccess,
                         () => { }
                     );
                     started = true;
+                    console.log('Camera started with device:', devices[0].label || devices[0].id);
                 }
             } catch (e) {
                 console.warn('Camera enumeration failed, trying fallback:', e.message);
@@ -452,21 +666,19 @@
 
             // Fallback: try facingMode configs
             if (!started) {
-                for (const config of cameraConfigs) {
+                for (const mode of ['environment', 'user']) {
                     try {
                         await html5QrCode.start(
-                            config,
-                            { fps: 10, qrbox: { width: 250, height: 250 } },
-                            async (decodedText) => {
-                                await stopVerifyScanner();
-                                handleQRData(decodedText);
-                            },
+                            { facingMode: mode },
+                            scannerConfig,
+                            onScanSuccess,
                             () => { }
                         );
                         started = true;
+                        console.log('Camera started with facingMode:', mode);
                         break;
                     } catch (e) {
-                        console.warn('Camera config failed:', config, e.message);
+                        console.warn(`Camera ${mode} failed:`, e.message);
                     }
                 }
             }
@@ -474,14 +686,17 @@
             if (started) {
                 document.getElementById('start-scanner-btn').disabled = true;
                 document.getElementById('stop-scanner-btn').disabled = false;
-                showToast('📷 Camera scanner activated', 'info');
+                showToast('📷 Camera scanner activated — point at a QR code', 'success');
             } else {
                 // Show file upload fallback
-                showToast('📷 Camera unavailable. Use file upload or enter batch number manually.', 'warning');
+                showFileUploadFallback('qr-reader');
+                showToast('📷 Camera not available. You can upload a QR code image instead.', 'warning');
                 html5QrCode = null;
             }
         } catch (err) {
-            showToast('Camera access denied: ' + err.message, 'error');
+            console.error('Scanner start error:', err);
+            showFileUploadFallback('qr-reader');
+            showToast('Camera access denied. You can upload a QR code image instead.', 'error');
         }
     }
 
@@ -503,26 +718,43 @@
             }
             const reader = document.getElementById('scanner-reader');
             reader.innerHTML = '';
+            reader.style.minHeight = '350px';
             document.getElementById('scanner-overlay').style.display = 'none';
+
+            // Dispose previous instance if any
+            if (scannerPageQr) {
+                try { await scannerPageQr.stop(); } catch (e) { }
+                scannerPageQr = null;
+            }
+
             scannerPageQr = new Html5Qrcode('scanner-reader');
 
             let started = false;
+            const scannerConfig = { fps: 15, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
+
             const scanCallback = async (decodedText) => {
-                handleQRData(decodedText);
+                // Debounce: ignore same code within 3 seconds
+                const now = Date.now();
+                if (decodedText === lastScannedCode && now - lastScanTime < 3000) return;
+                lastScannedCode = decodedText;
+                lastScanTime = now;
                 addToScanHistory(decodedText);
+                handleQRData(decodedText);
             };
 
             // Try camera list first
             try {
                 const devices = await Html5Qrcode.getCameras();
+                console.log('Available cameras:', devices);
                 if (devices && devices.length > 0) {
                     await scannerPageQr.start(
                         devices[0].id,
-                        { fps: 10, qrbox: { width: 250, height: 250 } },
+                        scannerConfig,
                         scanCallback,
                         () => { }
                     );
                     started = true;
+                    console.log('Page scanner started with device:', devices[0].label || devices[0].id);
                 }
             } catch (e) {
                 console.warn('Camera list failed:', e.message);
@@ -534,11 +766,12 @@
                     try {
                         await scannerPageQr.start(
                             { facingMode: mode },
-                            { fps: 10, qrbox: { width: 250, height: 250 } },
+                            scannerConfig,
                             scanCallback,
                             () => { }
                         );
                         started = true;
+                        console.log('Page scanner started with facingMode:', mode);
                         break;
                     } catch (e) {
                         console.warn(`Camera ${mode} failed:`, e.message);
@@ -551,12 +784,17 @@
                 document.getElementById('scanner-stop').disabled = false;
                 document.getElementById('cam-dot').classList.add('active');
                 document.getElementById('cam-status-text').textContent = 'Active';
-                showToast('📷 IoT Camera scanner activated', 'info');
+                showToast('📷 IoT Camera scanner activated — point at a QR code', 'success');
             } else {
-                showToast('📷 Camera unavailable. Check browser permissions.', 'warning');
+                // Show file upload fallback on the scanner page
+                showFileUploadFallback('scanner-reader');
+                document.getElementById('scanner-overlay').style.display = 'none';
+                showToast('📷 Camera not available. You can upload a QR code image.', 'warning');
                 scannerPageQr = null;
             }
         } catch (err) {
+            console.error('Page scanner start error:', err);
+            showFileUploadFallback('scanner-reader');
             showToast('Camera failed: ' + err.message, 'error');
         }
     }
@@ -571,7 +809,70 @@
         document.getElementById('cam-dot').classList.remove('active');
         document.getElementById('cam-status-text').textContent = 'Inactive';
         document.getElementById('scanner-overlay').style.display = 'flex';
+        // Restore the reader container
+        const reader = document.getElementById('scanner-reader');
+        reader.innerHTML = '';
     }
+
+    // ===== File Upload QR Fallback =====
+    function showFileUploadFallback(containerId) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = `
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;min-height:300px;gap:20px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="64" height="64" style="color:var(--accent-blue);opacity:0.6;">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                <p style="color:var(--text-secondary);font-size:0.95rem;text-align:center;">Camera not available.<br>Upload a QR code image to scan:</p>
+                <label style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:var(--gradient-primary);color:white;border-radius:var(--radius-sm);cursor:pointer;font-weight:600;font-size:0.9rem;box-shadow:0 4px 12px rgba(0,212,255,0.2);transition:all 0.3s ease;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    Choose QR Image
+                    <input type="file" accept="image/*" style="display:none;" onchange="window._handleQRFileUpload(event, '${containerId}')"/>
+                </label>
+                <p style="color:var(--text-muted);font-size:0.8rem;">Supports PNG, JPG, and other image formats</p>
+            </div>
+        `;
+    }
+
+    window._handleQRFileUpload = async function (event, containerId) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        showToast('📷 Processing QR code image...', 'info');
+
+        try {
+            const tempScanner = new Html5Qrcode('_temp_qr_upload');
+            // Create a temp hidden div for the scanner
+            let tempDiv = document.getElementById('_temp_qr_upload');
+            if (!tempDiv) {
+                tempDiv = document.createElement('div');
+                tempDiv.id = '_temp_qr_upload';
+                tempDiv.style.display = 'none';
+                document.body.appendChild(tempDiv);
+            }
+
+            const result = await tempScanner.scanFile(file, true);
+            showToast('✅ QR code detected!', 'success');
+            handleQRData(result);
+
+            // Add to scan history if on scanner page
+            if (containerId === 'scanner-reader') {
+                addToScanHistory(result);
+            }
+
+            // Clean up
+            tempScanner.clear();
+            tempDiv.remove();
+        } catch (err) {
+            console.error('QR file scan failed:', err);
+            showToast('❌ Could not read QR code from image. Try a clearer image.', 'error');
+        }
+    };
 
     async function addToScanHistory(data) {
         let batch = data;

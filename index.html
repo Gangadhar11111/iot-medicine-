@@ -1,25 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MediChain — IoT Blockchain Medical Authentication</title>
-    <meta name="description" content="Secure, decentralized IoT-based medical authentication system using blockchain to verify medicine authenticity and prevent counterfeit drugs.">
-    
+    <meta name="description"
+        content="Secure, decentralized IoT-based medical authentication system using blockchain to verify medicine authenticity and prevent counterfeit drugs.">
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
+
     <!-- QR Code Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-    
+
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    
+
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
     <!-- Loading Screen -->
     <div id="loading-screen" class="loading-screen">
@@ -27,13 +32,13 @@
             <div class="loading-logo">
                 <div class="loading-icon">
                     <svg viewBox="0 0 64 64" fill="none">
-                        <rect x="8" y="8" width="48" height="48" rx="12" stroke="url(#grad1)" stroke-width="3"/>
-                        <path d="M20 32h24M32 20v24" stroke="url(#grad1)" stroke-width="3" stroke-linecap="round"/>
-                        <circle cx="32" cy="32" r="6" fill="url(#grad1)" opacity="0.3"/>
+                        <rect x="8" y="8" width="48" height="48" rx="12" stroke="url(#grad1)" stroke-width="3" />
+                        <path d="M20 32h24M32 20v24" stroke="url(#grad1)" stroke-width="3" stroke-linecap="round" />
+                        <circle cx="32" cy="32" r="6" fill="url(#grad1)" opacity="0.3" />
                         <defs>
                             <linearGradient id="grad1" x1="0" y1="0" x2="64" y2="64">
-                                <stop offset="0%" stop-color="#00d4ff"/>
-                                <stop offset="100%" stop-color="#7c3aed"/>
+                                <stop offset="0%" stop-color="#00d4ff" />
+                                <stop offset="100%" stop-color="#7c3aed" />
                             </linearGradient>
                         </defs>
                     </svg>
@@ -60,12 +65,14 @@
                 <div class="logo">
                     <div class="logo-icon">
                         <svg viewBox="0 0 40 40" fill="none">
-                            <rect x="4" y="4" width="32" height="32" rx="8" stroke="url(#logoGrad)" stroke-width="2.5"/>
-                            <path d="M13 20h14M20 13v14" stroke="url(#logoGrad)" stroke-width="2.5" stroke-linecap="round"/>
+                            <rect x="4" y="4" width="32" height="32" rx="8" stroke="url(#logoGrad)"
+                                stroke-width="2.5" />
+                            <path d="M13 20h14M20 13v14" stroke="url(#logoGrad)" stroke-width="2.5"
+                                stroke-linecap="round" />
                             <defs>
                                 <linearGradient id="logoGrad" x1="0" y1="0" x2="40" y2="40">
-                                    <stop offset="0%" stop-color="#00d4ff"/>
-                                    <stop offset="100%" stop-color="#7c3aed"/>
+                                    <stop offset="0%" stop-color="#00d4ff" />
+                                    <stop offset="100%" stop-color="#7c3aed" />
                                 </linearGradient>
                             </defs>
                         </svg>
@@ -81,38 +88,62 @@
                 <div class="nav-section">
                     <span class="nav-section-title">Main</span>
                     <a href="#" class="nav-link active" data-page="dashboard" id="nav-dashboard">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                            <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                            <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                            <rect x="14" y="14" width="7" height="7" rx="1.5" />
+                        </svg>
                         <span>Dashboard</span>
                     </a>
                     <a href="#" class="nav-link" data-page="register" id="nav-register">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/><circle cx="12" cy="12" r="10"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 5v14M5 12h14" />
+                            <circle cx="12" cy="12" r="10" />
+                        </svg>
                         <span>Register Medicine</span>
                     </a>
                     <a href="#" class="nav-link" data-page="verify" id="nav-verify">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><rect x="3" y="3" width="18" height="18" rx="4"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 12l2 2 4-4" />
+                            <rect x="3" y="3" width="18" height="18" rx="4" />
+                        </svg>
                         <span>Verify Medicine</span>
                     </a>
                 </div>
                 <div class="nav-section">
                     <span class="nav-section-title">Supply Chain</span>
                     <a href="#" class="nav-link" data-page="supplychain" id="nav-supplychain">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16M4 6h16M4 18h16"/><circle cx="8" cy="6" r="2" fill="currentColor"/><circle cx="16" cy="12" r="2" fill="currentColor"/><circle cx="10" cy="18" r="2" fill="currentColor"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 12h16M4 6h16M4 18h16" />
+                            <circle cx="8" cy="6" r="2" fill="currentColor" />
+                            <circle cx="16" cy="12" r="2" fill="currentColor" />
+                            <circle cx="10" cy="18" r="2" fill="currentColor" />
+                        </svg>
                         <span>Supply Chain</span>
                     </a>
                     <a href="#" class="nav-link" data-page="transactions" id="nav-transactions">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7l6-4 6 4 6-4v14l-6 4-6-4-6 4z"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 7l6-4 6 4 6-4v14l-6 4-6-4-6 4z" />
+                        </svg>
                         <span>Transactions</span>
                     </a>
                 </div>
                 <div class="nav-section">
                     <span class="nav-section-title">Tools</span>
                     <a href="#" class="nav-link" data-page="scanner" id="nav-scanner">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path
+                                d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2" />
+                            <line x1="7" y1="12" x2="17" y2="12" />
+                        </svg>
                         <span>QR Scanner</span>
                         <span class="nav-badge">IoT</span>
                     </a>
                     <a href="#" class="nav-link" data-page="alerts" id="nav-alerts">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" />
+                        </svg>
                         <span>Alerts</span>
                         <span class="nav-badge alert-badge" id="alert-count">0</span>
                     </a>
@@ -139,27 +170,44 @@
             <!-- Top Bar -->
             <header class="topbar">
                 <button class="sidebar-toggle" id="sidebar-toggle">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="6" x2="21" y2="6" />
+                        <line x1="3" y1="12" x2="21" y2="12" />
+                        <line x1="3" y1="18" x2="21" y2="18" />
+                    </svg>
                 </button>
                 <div class="topbar-left">
                     <h1 class="page-title" id="page-title">Dashboard</h1>
                     <div class="breadcrumb">
                         <span>MediChain</span>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M9 18l6-6-6-6"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14"
+                            height="14">
+                            <path d="M9 18l6-6-6-6" />
+                        </svg>
                         <span id="breadcrumb-current">Dashboard</span>
                     </div>
                 </div>
                 <div class="topbar-right">
                     <div class="search-bar">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8" />
+                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        </svg>
                         <input type="text" placeholder="Search medicines, batches..." id="global-search">
                     </div>
                     <div class="topbar-actions">
                         <button class="icon-btn" id="theme-toggle" title="Toggle Theme">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="5" />
+                                <path
+                                    d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                            </svg>
                         </button>
                         <button class="icon-btn notification-btn" id="notification-btn">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                                <path d="M13.73 21a2 2 0 01-3.46 0" />
+                            </svg>
                             <span class="notification-dot" id="notification-dot"></span>
                         </button>
                         <div class="user-profile" id="user-profile">
@@ -182,53 +230,81 @@
                     <div class="stats-grid">
                         <div class="stat-card" id="stat-total">
                             <div class="stat-icon blue">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8 4-8-4 8-4 8 4z"/><path d="M4 11l8 4 8-4"/><path d="M4 15l8 4 8-4"/></svg>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 7l-8 4-8-4 8-4 8 4z" />
+                                    <path d="M4 11l8 4 8-4" />
+                                    <path d="M4 15l8 4 8-4" />
+                                </svg>
                             </div>
                             <div class="stat-details">
                                 <span class="stat-value" id="total-medicines">0</span>
                                 <span class="stat-label">Total Medicines</span>
                             </div>
                             <div class="stat-trend up">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16"
+                                    height="16">
+                                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                                </svg>
                                 <span>+12%</span>
                             </div>
                         </div>
                         <div class="stat-card" id="stat-verified">
                             <div class="stat-icon green">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+                                    <path d="M22 4L12 14.01l-3-3" />
+                                </svg>
                             </div>
                             <div class="stat-details">
                                 <span class="stat-value" id="verified-count">0</span>
                                 <span class="stat-label">Verified Authentic</span>
                             </div>
                             <div class="stat-trend up">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16"
+                                    height="16">
+                                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                                </svg>
                                 <span>+8%</span>
                             </div>
                         </div>
                         <div class="stat-card" id="stat-flagged">
                             <div class="stat-icon red">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12" y2="17"/></svg>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path
+                                        d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                                    <line x1="12" y1="9" x2="12" y2="13" />
+                                    <line x1="12" y1="17" x2="12" y2="17" />
+                                </svg>
                             </div>
                             <div class="stat-details">
                                 <span class="stat-value" id="flagged-count">0</span>
                                 <span class="stat-label">Counterfeit Alerts</span>
                             </div>
                             <div class="stat-trend down">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/></svg>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16"
+                                    height="16">
+                                    <polyline points="23 18 13.5 8.5 8.5 13.5 1 6" />
+                                </svg>
                                 <span>-3%</span>
                             </div>
                         </div>
                         <div class="stat-card" id="stat-blocks">
                             <div class="stat-icon purple">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="4"/><path d="M7 7h10v10H7z"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5"/></svg>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="2" y="2" width="20" height="20" rx="4" />
+                                    <path d="M7 7h10v10H7z" />
+                                    <path d="M12 2v5M12 17v5M2 12h5M17 12h5" />
+                                </svg>
                             </div>
                             <div class="stat-details">
                                 <span class="stat-value" id="block-count">1</span>
                                 <span class="stat-label">Blockchain Blocks</span>
                             </div>
                             <div class="stat-trend up">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16"
+                                    height="16">
+                                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                                </svg>
                                 <span>Active</span>
                             </div>
                         </div>
@@ -322,27 +398,36 @@
                                 <form id="register-form">
                                     <div class="form-row">
                                         <div class="form-group">
-                                            <label for="medicine-name">Medicine Name <span class="required">*</span></label>
-                                            <input type="text" id="medicine-name" placeholder="e.g., Paracetamol 500mg" required>
+                                            <label for="medicine-name">Medicine Name <span
+                                                    class="required">*</span></label>
+                                            <input type="text" id="medicine-name" placeholder="e.g., Paracetamol 500mg"
+                                                required>
                                         </div>
                                         <div class="form-group">
-                                            <label for="batch-number">Batch Number <span class="required">*</span></label>
-                                            <input type="text" id="batch-number" placeholder="e.g., BATCH-2026-001" required>
-                                        </div>
-                                    </div>
-                                    <div class="form-row">
-                                        <div class="form-group">
-                                            <label for="manufacturer-id">Manufacturer ID <span class="required">*</span></label>
-                                            <input type="text" id="manufacturer-id" placeholder="e.g., MFG-PHARMA-001" required>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="manufacturer-name">Manufacturer Name <span class="required">*</span></label>
-                                            <input type="text" id="manufacturer-name" placeholder="e.g., PharmaCorp Ltd." required>
+                                            <label for="batch-number">Batch Number <span
+                                                    class="required">*</span></label>
+                                            <input type="text" id="batch-number" placeholder="e.g., BATCH-2026-001"
+                                                required>
                                         </div>
                                     </div>
                                     <div class="form-row">
                                         <div class="form-group">
-                                            <label for="mfg-date">Manufacturing Date <span class="required">*</span></label>
+                                            <label for="manufacturer-id">Manufacturer ID <span
+                                                    class="required">*</span></label>
+                                            <input type="text" id="manufacturer-id" placeholder="e.g., MFG-PHARMA-001"
+                                                required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="manufacturer-name">Manufacturer Name <span
+                                                    class="required">*</span></label>
+                                            <input type="text" id="manufacturer-name"
+                                                placeholder="e.g., PharmaCorp Ltd." required>
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="mfg-date">Manufacturing Date <span
+                                                    class="required">*</span></label>
                                             <input type="date" id="mfg-date" required>
                                         </div>
                                         <div class="form-group">
@@ -371,22 +456,31 @@
                                     </div>
                                     <div class="form-group">
                                         <label for="composition">Composition / Ingredients</label>
-                                        <textarea id="composition" rows="3" placeholder="e.g., Paracetamol IP 500mg, Excipients q.s."></textarea>
+                                        <textarea id="composition" rows="3"
+                                            placeholder="e.g., Paracetamol IP 500mg, Excipients q.s."></textarea>
                                     </div>
                                     <div class="form-row">
                                         <div class="form-group">
                                             <label for="shipment-dest">Shipment Destination</label>
-                                            <input type="text" id="shipment-dest" placeholder="e.g., City Medical Store, Mumbai">
+                                            <input type="text" id="shipment-dest"
+                                                placeholder="e.g., City Medical Store, Mumbai">
                                         </div>
                                         <div class="form-group">
                                             <label for="price">MRP (₹)</label>
-                                            <input type="number" id="price" placeholder="e.g., 50.00" step="0.01" min="0">
+                                            <input type="number" id="price" placeholder="e.g., 50.00" step="0.01"
+                                                min="0">
                                         </div>
                                     </div>
                                     <div class="form-actions">
-                                        <button type="button" class="btn btn-outline" id="reset-form">Reset Form</button>
+                                        <button type="button" class="btn btn-outline" id="reset-form">Reset
+                                            Form</button>
                                         <button type="submit" class="btn btn-primary" id="register-btn">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="2" y="2" width="20" height="20" rx="4"/><path d="M7 7h10v10H7z"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5"/></svg>
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                width="18" height="18">
+                                                <rect x="2" y="2" width="20" height="20" rx="4" />
+                                                <path d="M7 7h10v10H7z" />
+                                                <path d="M12 2v5M12 17v5M2 12h5M17 12h5" />
+                                            </svg>
                                             Register on Blockchain
                                         </button>
                                     </div>
@@ -400,12 +494,14 @@
                             </div>
                             <div class="card-body qr-preview-body">
                                 <div class="qr-placeholder" id="qr-placeholder">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="64" height="64" opacity="0.3">
-                                        <path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/>
-                                        <rect x="7" y="7" width="4" height="4" rx="0.5"/>
-                                        <rect x="13" y="7" width="4" height="4" rx="0.5"/>
-                                        <rect x="7" y="13" width="4" height="4" rx="0.5"/>
-                                        <rect x="13" y="13" width="4" height="4" rx="0.5"/>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                                        width="64" height="64" opacity="0.3">
+                                        <path
+                                            d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2" />
+                                        <rect x="7" y="7" width="4" height="4" rx="0.5" />
+                                        <rect x="13" y="7" width="4" height="4" rx="0.5" />
+                                        <rect x="7" y="13" width="4" height="4" rx="0.5" />
+                                        <rect x="13" y="13" width="4" height="4" rx="0.5" />
                                     </svg>
                                     <p>Fill in the form and register to generate QR code</p>
                                 </div>
@@ -417,11 +513,21 @@
                                     </div>
                                     <div class="qr-actions">
                                         <button class="btn btn-sm btn-outline" id="download-qr">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                width="16" height="16">
+                                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                                                <polyline points="7 10 12 15 17 10" />
+                                                <line x1="12" y1="15" x2="12" y2="3" />
+                                            </svg>
                                             Download QR
                                         </button>
                                         <button class="btn btn-sm btn-primary" id="print-qr">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                width="16" height="16">
+                                                <path
+                                                    d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" />
+                                                <rect x="6" y="14" width="12" height="8" />
+                                            </svg>
                                             Print
                                         </button>
                                     </div>
@@ -466,23 +572,47 @@
                             <div class="card-body">
                                 <div class="verify-tabs">
                                     <button class="verify-tab active" data-tab="manual" id="tab-manual">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            width="20" height="20">
+                                            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                                            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                        </svg>
                                         Manual Entry
                                     </button>
                                     <button class="verify-tab" data-tab="qrscan" id="tab-qrscan">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></svg>
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            width="20" height="20">
+                                            <path
+                                                d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2" />
+                                            <line x1="7" y1="12" x2="17" y2="12" />
+                                        </svg>
                                         QR Scanner
                                         <span class="nav-badge">Camera</span>
+                                    </button>
+                                    <button class="verify-tab" data-tab="qrupload" id="tab-qrupload">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            width="20" height="20">
+                                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                                            <polyline points="17 8 12 3 7 8" />
+                                            <line x1="12" y1="3" x2="12" y2="15" />
+                                        </svg>
+                                        Upload QR
+                                        <span class="nav-badge">Image</span>
                                     </button>
                                 </div>
                                 <div class="verify-content">
                                     <div class="verify-panel active" id="panel-manual">
                                         <div class="form-group">
                                             <label for="verify-batch">Batch Number</label>
-                                            <input type="text" id="verify-batch" placeholder="Enter batch number (e.g., BATCH-2026-001)">
+                                            <input type="text" id="verify-batch"
+                                                placeholder="Enter batch number (e.g., BATCH-2026-001)">
                                         </div>
                                         <button class="btn btn-primary btn-full" id="verify-manual-btn">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                width="18" height="18">
+                                                <circle cx="11" cy="11" r="8" />
+                                                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                                            </svg>
                                             Verify on Blockchain
                                         </button>
                                     </div>
@@ -496,15 +626,75 @@
                                         </div>
                                         <div class="scanner-controls">
                                             <button class="btn btn-primary" id="start-scanner-btn">
-                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2" width="18" height="18">
+                                                    <polygon points="5 3 19 12 5 21 5 3" />
+                                                </svg>
                                                 Start Scanner
                                             </button>
                                             <button class="btn btn-outline" id="stop-scanner-btn" disabled>
-                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2" width="18" height="18">
+                                                    <rect x="6" y="4" width="4" height="16" />
+                                                    <rect x="14" y="4" width="4" height="16" />
+                                                </svg>
                                                 Stop Scanner
                                             </button>
                                         </div>
-                                        <p class="scanner-hint">Position the QR code within the camera frame. The scanner uses your laptop's built-in camera. Future IoT integration will support external QR controller devices.</p>
+                                        <p class="scanner-hint">Position the QR code within the camera frame. The
+                                            scanner uses your laptop's built-in camera. Future IoT integration will
+                                            support external QR controller devices.</p>
+                                    </div>
+                                    <div class="verify-panel" id="panel-qrupload">
+                                        <div class="qr-upload-zone" id="verify-upload-zone">
+                                            <div class="upload-icon">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="1.5" width="56" height="56">
+                                                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                                                    <polyline points="17 8 12 3 7 8" />
+                                                    <line x1="12" y1="3" x2="12" y2="15" />
+                                                </svg>
+                                            </div>
+                                            <h4>Upload QR Code Image</h4>
+                                            <p>Drag & drop a QR code image here, or click to browse</p>
+                                            <input type="file" accept="image/*" id="verify-qr-file-input"
+                                                class="upload-file-input" />
+                                            <label for="verify-qr-file-input" class="btn btn-primary">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2" width="18" height="18">
+                                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                                    <circle cx="8.5" cy="8.5" r="1.5" />
+                                                    <polyline points="21 15 16 10 5 21" />
+                                                </svg>
+                                                Choose Image
+                                            </label>
+                                            <span class="upload-formats">Supports PNG, JPG, JPEG, BMP, GIF</span>
+                                        </div>
+                                        <div class="upload-preview hidden" id="verify-upload-preview">
+                                            <img id="verify-preview-img" alt="QR Preview" />
+                                            <div class="upload-preview-actions">
+                                                <button class="btn btn-primary" id="verify-scan-uploaded">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                        stroke-width="2" width="18" height="18">
+                                                        <path
+                                                            d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2" />
+                                                        <line x1="7" y1="12" x2="17" y2="12" />
+                                                    </svg>
+                                                    Scan This QR Code
+                                                </button>
+                                                <button class="btn btn-outline" id="verify-clear-upload">Clear</button>
+                                            </div>
+                                        </div>
+                                        <div class="upload-result hidden" id="verify-upload-result">
+                                            <div class="upload-result-icon">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2" width="32" height="32">
+                                                    <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+                                                    <path d="M22 4L12 14.01l-3-3" />
+                                                </svg>
+                                            </div>
+                                            <span id="verify-upload-result-text"></span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -515,15 +705,21 @@
                             </div>
                             <div class="card-body">
                                 <div class="verify-result-placeholder" id="verify-placeholder">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="64" height="64" opacity="0.3">
-                                        <path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                                        width="64" height="64" opacity="0.3">
+                                        <path d="M9 12l2 2 4-4" />
+                                        <circle cx="12" cy="12" r="10" />
                                     </svg>
                                     <p>Scan or enter batch number to see verification results</p>
                                 </div>
                                 <div class="verify-result hidden" id="verify-success">
                                     <div class="result-banner authentic">
                                         <div class="result-icon">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                stroke-width="2.5">
+                                                <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+                                                <path d="M22 4L12 14.01l-3-3" />
+                                            </svg>
                                         </div>
                                         <h3>Medicine is Authentic</h3>
                                         <p>Verified on blockchain — All checks passed</p>
@@ -536,14 +732,24 @@
                                 <div class="verify-result hidden" id="verify-fail">
                                     <div class="result-banner counterfeit">
                                         <div class="result-icon">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                stroke-width="2.5">
+                                                <path
+                                                    d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                                                <line x1="12" y1="9" x2="12" y2="13" />
+                                                <line x1="12" y1="17" x2="12.01" y2="17" />
+                                            </svg>
                                         </div>
                                         <h3>Warning: Possible Counterfeit Medicine</h3>
                                         <p id="fail-reason">Record not found on blockchain</p>
                                     </div>
                                     <div class="alert-actions">
                                         <button class="btn btn-danger" id="report-counterfeit">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                width="18" height="18">
+                                                <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+                                                <line x1="4" y1="22" x2="4" y2="15" />
+                                            </svg>
                                             Report Counterfeit
                                         </button>
                                     </div>
@@ -688,13 +894,31 @@
                                 </div>
                                 <div class="scanner-page-controls">
                                     <button class="btn btn-primary btn-lg" id="scanner-start">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            width="20" height="20">
+                                            <polygon points="5 3 19 12 5 21 5 3" />
+                                        </svg>
                                         Start Camera
                                     </button>
                                     <button class="btn btn-outline btn-lg" id="scanner-stop" disabled>
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            width="20" height="20">
+                                            <rect x="6" y="4" width="4" height="16" />
+                                            <rect x="14" y="4" width="4" height="16" />
+                                        </svg>
                                         Stop Camera
                                     </button>
+                                    <label class="btn btn-outline btn-lg upload-qr-label" for="scanner-qr-file-input">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            width="20" height="20">
+                                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                                            <polyline points="17 8 12 3 7 8" />
+                                            <line x1="12" y1="3" x2="12" y2="15" />
+                                        </svg>
+                                        Upload QR Image
+                                        <input type="file" accept="image/*" id="scanner-qr-file-input"
+                                            class="upload-file-input" />
+                                    </label>
                                 </div>
                             </div>
                         </div>
@@ -728,7 +952,11 @@
                         <div class="card-body">
                             <div class="alerts-list" id="alerts-list">
                                 <div class="empty-state mini">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48" opacity="0.3"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                                        width="48" height="48" opacity="0.3">
+                                        <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+                                        <path d="M22 4L12 14.01l-3-3" />
+                                    </svg>
                                     <p>No alerts. All medicines verified successfully.</p>
                                 </div>
                             </div>
@@ -756,4 +984,5 @@
     <script src="blockchain.js"></script>
     <script src="app.js"></script>
 </body>
+
 </html>
