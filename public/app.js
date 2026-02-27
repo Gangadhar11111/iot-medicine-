@@ -244,15 +244,25 @@
                 batch: medicineData.batchNumber,
                 name: medicineData.medicineName,
                 mfg: medicineData.manufacturerId,
-                contract: contractAddress || 'local',
+                contract: (MM.hasContract && MM.contract) ? MM.contract.target || 'blockchain' : 'local',
                 block: result.blockNumber
             });
 
-            const canvas = document.getElementById('qr-canvas');
-            await QRCode.toCanvas(canvas, qrData, {
-                width: 200, margin: 2,
-                color: { dark: '#0a0e1a', light: '#ffffff' }
-            });
+            const qrContainer = document.getElementById('qr-canvas');
+            qrContainer.innerHTML = ''; // Clear previous QR
+            if (typeof QRCode !== 'undefined') {
+                new QRCode(qrContainer, {
+                    text: qrData,
+                    width: 200,
+                    height: 200,
+                    colorDark: '#0a0e1a',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            } else {
+                qrContainer.innerHTML = '<p style="padding:40px;color:#666;">QR library failed to load</p>';
+                console.warn('QRCode library not loaded.');
+            }
 
             // Show results
             document.getElementById('qr-placeholder').classList.add('hidden');
@@ -404,22 +414,72 @@
     // ===== QR Scanning =====
     async function startVerifyScanner() {
         try {
+            if (typeof Html5Qrcode === 'undefined') {
+                showToast('QR Scanner library not loaded. Refresh the page.', 'error');
+                return;
+            }
             const reader = document.getElementById('qr-reader');
             reader.innerHTML = '';
             document.getElementById('scanner-status').style.display = 'none';
             html5QrCode = new Html5Qrcode('qr-reader');
-            await html5QrCode.start(
-                { facingMode: 'environment' },
-                { fps: 10, qrbox: { width: 250, height: 250 } },
-                async (decodedText) => {
-                    await stopVerifyScanner();
-                    handleQRData(decodedText);
-                },
-                () => { }
-            );
-            document.getElementById('start-scanner-btn').disabled = true;
-            document.getElementById('stop-scanner-btn').disabled = false;
-            showToast('📷 Camera scanner activated', 'info');
+
+            // Try multiple camera options
+            let started = false;
+            const cameraConfigs = [
+                { facingMode: 'environment' },  // Back camera (mobile)
+                { facingMode: 'user' },          // Front camera (laptop)
+            ];
+
+            // First try to get available cameras
+            try {
+                const devices = await Html5Qrcode.getCameras();
+                if (devices && devices.length > 0) {
+                    // Use first available camera
+                    await html5QrCode.start(
+                        devices[0].id,
+                        { fps: 10, qrbox: { width: 250, height: 250 } },
+                        async (decodedText) => {
+                            await stopVerifyScanner();
+                            handleQRData(decodedText);
+                        },
+                        () => { }
+                    );
+                    started = true;
+                }
+            } catch (e) {
+                console.warn('Camera enumeration failed, trying fallback:', e.message);
+            }
+
+            // Fallback: try facingMode configs
+            if (!started) {
+                for (const config of cameraConfigs) {
+                    try {
+                        await html5QrCode.start(
+                            config,
+                            { fps: 10, qrbox: { width: 250, height: 250 } },
+                            async (decodedText) => {
+                                await stopVerifyScanner();
+                                handleQRData(decodedText);
+                            },
+                            () => { }
+                        );
+                        started = true;
+                        break;
+                    } catch (e) {
+                        console.warn('Camera config failed:', config, e.message);
+                    }
+                }
+            }
+
+            if (started) {
+                document.getElementById('start-scanner-btn').disabled = true;
+                document.getElementById('stop-scanner-btn').disabled = false;
+                showToast('📷 Camera scanner activated', 'info');
+            } else {
+                // Show file upload fallback
+                showToast('📷 Camera unavailable. Use file upload or enter batch number manually.', 'warning');
+                html5QrCode = null;
+            }
         } catch (err) {
             showToast('Camera access denied: ' + err.message, 'error');
         }
@@ -437,24 +497,65 @@
 
     async function startPageScanner() {
         try {
+            if (typeof Html5Qrcode === 'undefined') {
+                showToast('QR Scanner library not loaded. Refresh the page.', 'error');
+                return;
+            }
             const reader = document.getElementById('scanner-reader');
             reader.innerHTML = '';
             document.getElementById('scanner-overlay').style.display = 'none';
             scannerPageQr = new Html5Qrcode('scanner-reader');
-            await scannerPageQr.start(
-                { facingMode: 'environment' },
-                { fps: 10, qrbox: { width: 250, height: 250 } },
-                async (decodedText) => {
-                    handleQRData(decodedText);
-                    addToScanHistory(decodedText);
-                },
-                () => { }
-            );
-            document.getElementById('scanner-start').disabled = true;
-            document.getElementById('scanner-stop').disabled = false;
-            document.getElementById('cam-dot').classList.add('active');
-            document.getElementById('cam-status-text').textContent = 'Active';
-            showToast('📷 IoT Camera scanner activated', 'info');
+
+            let started = false;
+            const scanCallback = async (decodedText) => {
+                handleQRData(decodedText);
+                addToScanHistory(decodedText);
+            };
+
+            // Try camera list first
+            try {
+                const devices = await Html5Qrcode.getCameras();
+                if (devices && devices.length > 0) {
+                    await scannerPageQr.start(
+                        devices[0].id,
+                        { fps: 10, qrbox: { width: 250, height: 250 } },
+                        scanCallback,
+                        () => { }
+                    );
+                    started = true;
+                }
+            } catch (e) {
+                console.warn('Camera list failed:', e.message);
+            }
+
+            // Fallback to facingMode
+            if (!started) {
+                for (const mode of ['environment', 'user']) {
+                    try {
+                        await scannerPageQr.start(
+                            { facingMode: mode },
+                            { fps: 10, qrbox: { width: 250, height: 250 } },
+                            scanCallback,
+                            () => { }
+                        );
+                        started = true;
+                        break;
+                    } catch (e) {
+                        console.warn(`Camera ${mode} failed:`, e.message);
+                    }
+                }
+            }
+
+            if (started) {
+                document.getElementById('scanner-start').disabled = true;
+                document.getElementById('scanner-stop').disabled = false;
+                document.getElementById('cam-dot').classList.add('active');
+                document.getElementById('cam-status-text').textContent = 'Active';
+                showToast('📷 IoT Camera scanner activated', 'info');
+            } else {
+                showToast('📷 Camera unavailable. Check browser permissions.', 'warning');
+                scannerPageQr = null;
+            }
         } catch (err) {
             showToast('Camera failed: ' + err.message, 'error');
         }
@@ -786,21 +887,26 @@
 
     // ===== QR Download/Print =====
     function downloadQR() {
-        const canvas = document.getElementById('qr-canvas');
+        const qrContainer = document.getElementById('qr-canvas');
+        const img = qrContainer.querySelector('img') || qrContainer.querySelector('canvas');
+        if (!img) { showToast('No QR code to download', 'error'); return; }
         const link = document.createElement('a');
         link.download = `MediChain_QR_${document.getElementById('qr-batch-id').textContent}.png`;
-        link.href = canvas.toDataURL();
+        link.href = img.src || img.toDataURL();
         link.click();
         showToast('QR Code downloaded', 'success');
     }
 
     function printQR() {
-        const canvas = document.getElementById('qr-canvas');
+        const qrContainer = document.getElementById('qr-canvas');
+        const img = qrContainer.querySelector('img') || qrContainer.querySelector('canvas');
+        if (!img) return;
+        const imgSrc = img.src || img.toDataURL();
         const w = window.open('');
         w.document.write(`<html><head><title>MediChain QR</title></head><body style="text-align:center;padding:40px;">
             <h2>${document.getElementById('qr-med-name').textContent}</h2>
             <p>${document.getElementById('qr-batch-id').textContent}</p>
-            <img src="${canvas.toDataURL()}" style="width:300px;"/><br>
+            <img src="${imgSrc}" style="width:300px;"/><br>
             <p style="color:#888;font-size:12px;">Verified by MediChain Blockchain</p>
             <script>window.print();<\/script></body></html>`);
     }
