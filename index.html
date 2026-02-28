@@ -16,7 +16,7 @@
         rel="stylesheet">
 
     <!-- QR Code Libraries -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
     <!-- Chart.js -->
@@ -506,7 +506,7 @@
                                     <p>Fill in the form and register to generate QR code</p>
                                 </div>
                                 <div class="qr-result hidden" id="qr-result">
-                                    <canvas id="qr-canvas"></canvas>
+                                    <div id="qr-canvas" style="display:inline-block;"></div>
                                     <div class="qr-info">
                                         <span class="qr-medicine-name" id="qr-med-name"></span>
                                         <span class="qr-batch" id="qr-batch-id"></span>

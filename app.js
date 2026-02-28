@@ -197,11 +197,21 @@
 
             // Generate QR
             const qrData = blockchain.generateQRData(medicineData.batchNumber);
-            const canvas = document.getElementById('qr-canvas');
-            await QRCode.toCanvas(canvas, qrData, {
-                width: 200, margin: 2,
-                color: { dark: '#0a0e1a', light: '#ffffff' }
-            });
+            const qrContainer = document.getElementById('qr-canvas');
+            qrContainer.innerHTML = ''; // Clear previous QR
+            if (typeof QRCode !== 'undefined') {
+                new QRCode(qrContainer, {
+                    text: qrData,
+                    width: 200,
+                    height: 200,
+                    colorDark: '#0a0e1a',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            } else {
+                qrContainer.innerHTML = '<p style="padding:40px;color:#666;">QR library failed to load</p>';
+                console.warn('QRCode library not loaded.');
+            }
 
             // Show QR result
             document.getElementById('qr-placeholder').classList.add('hidden');
@@ -296,6 +306,10 @@
     // ===== QR Scanning (Verify Page) =====
     async function startVerifyScanner() {
         try {
+            if (typeof Html5Qrcode === 'undefined') {
+                showToast('QR Scanner library not loaded. Refresh the page.', 'error');
+                return;
+            }
             const reader = document.getElementById('qr-reader');
             reader.innerHTML = '';
             document.getElementById('scanner-status').style.display = 'none';
@@ -330,6 +344,10 @@
     // ===== QR Scanning (Scanner Page) =====
     async function startPageScanner() {
         try {
+            if (typeof Html5Qrcode === 'undefined') {
+                showToast('QR Scanner library not loaded. Refresh the page.', 'error');
+                return;
+            }
             const reader = document.getElementById('scanner-reader');
             reader.innerHTML = '';
             document.getElementById('scanner-overlay').style.display = 'none';
@@ -676,7 +694,9 @@
 
     // ===== Download QR =====
     function downloadQR() {
-        const canvas = document.getElementById('qr-canvas');
+        const qrContainer = document.getElementById('qr-canvas');
+        const canvas = qrContainer.querySelector('canvas');
+        if (!canvas) { showToast('No QR code to download', 'error'); return; }
         const link = document.createElement('a');
         link.download = `MediChain_QR_${document.getElementById('qr-batch-id').textContent}.png`;
         link.href = canvas.toDataURL();
@@ -685,7 +705,9 @@
     }
 
     function printQR() {
-        const canvas = document.getElementById('qr-canvas');
+        const qrContainer = document.getElementById('qr-canvas');
+        const canvas = qrContainer.querySelector('canvas');
+        if (!canvas) { showToast('No QR code to print', 'error'); return; }
         const w = window.open('');
         w.document.write(`<html><head><title>MediChain QR</title></head><body style="text-align:center;padding:40px;">
             <h2>${document.getElementById('qr-med-name').textContent}</h2>
