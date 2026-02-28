@@ -1,0 +1,992 @@
+{
+  "contractAddress": "0x8c1B6caB667470aE2F50d99f7AF3261850c57Ba2",
+  "deployer": "0xfF38F3a9E0d2AEF03f0F69E5B8C913386E5bdDEf",
+  "network": "sepolia",
+  "chainId": "11155111",
+  "deployedAt": "2026-02-21T05:20:41.175Z",
+  "abi": [
+    {
+      "type": "constructor",
+      "stateMutability": "undefined",
+      "payable": false,
+      "inputs": []
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "CounterfeitAlertRaised",
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": "alertId",
+          "indexed": false
+        },
+        {
+          "type": "string",
+          "name": "batchNumber",
+          "indexed": false
+        },
+        {
+          "type": "string",
+          "name": "reason",
+          "indexed": false
+        },
+        {
+          "type": "address",
+          "name": "reportedBy",
+          "indexed": false
+        },
+        {
+          "type": "uint256",
+          "name": "timestamp",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "DistributorAuthorized",
+      "inputs": [
+        {
+          "type": "address",
+          "name": "distributor",
+          "indexed": true
+        },
+        {
+          "type": "uint256",
+          "name": "timestamp",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "ManufacturerAuthorized",
+      "inputs": [
+        {
+          "type": "address",
+          "name": "manufacturer",
+          "indexed": true
+        },
+        {
+          "type": "uint256",
+          "name": "timestamp",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "MedicineRegistered",
+      "inputs": [
+        {
+          "type": "string",
+          "name": "batchNumber",
+          "indexed": true
+        },
+        {
+          "type": "string",
+          "name": "medicineName",
+          "indexed": false
+        },
+        {
+          "type": "string",
+          "name": "manufacturerId",
+          "indexed": false
+        },
+        {
+          "type": "address",
+          "name": "registeredBy",
+          "indexed": false
+        },
+        {
+          "type": "uint256",
+          "name": "timestamp",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "MedicineStatusChanged",
+      "inputs": [
+        {
+          "type": "string",
+          "name": "batchNumber",
+          "indexed": true
+        },
+        {
+          "type": "uint8",
+          "name": "newStatus",
+          "indexed": false
+        },
+        {
+          "type": "uint256",
+          "name": "timestamp",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "MedicineVerified",
+      "inputs": [
+        {
+          "type": "string",
+          "name": "batchNumber",
+          "indexed": true
+        },
+        {
+          "type": "bool",
+          "name": "isAuthentic",
+          "indexed": false
+        },
+        {
+          "type": "address",
+          "name": "verifier",
+          "indexed": false
+        },
+        {
+          "type": "uint256",
+          "name": "timestamp",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "ShopAuthorized",
+      "inputs": [
+        {
+          "type": "address",
+          "name": "shop",
+          "indexed": true
+        },
+        {
+          "type": "uint256",
+          "name": "timestamp",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "SupplyChainUpdated",
+      "inputs": [
+        {
+          "type": "string",
+          "name": "batchNumber",
+          "indexed": true
+        },
+        {
+          "type": "uint8",
+          "name": "stage",
+          "indexed": false
+        },
+        {
+          "type": "string",
+          "name": "actor",
+          "indexed": false
+        },
+        {
+          "type": "string",
+          "name": "location",
+          "indexed": false
+        },
+        {
+          "type": "uint256",
+          "name": "timestamp",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "alertCount",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "alerts",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": "id"
+        },
+        {
+          "type": "string",
+          "name": "batchNumber"
+        },
+        {
+          "type": "string",
+          "name": "reason"
+        },
+        {
+          "type": "address",
+          "name": "reportedBy"
+        },
+        {
+          "type": "uint256",
+          "name": "timestamp"
+        },
+        {
+          "type": "bool",
+          "name": "resolved"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "allBatchNumbers",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "string",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "authorizeDistributor",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "_distributor"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "authorizeManufacturer",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "_manufacturer"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "authorizeShop",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "_shop"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "authorizedDistributors",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bool",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "authorizedManufacturers",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bool",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "authorizedShops",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bool",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "flagMedicine",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_batchNumber"
+        },
+        {
+          "type": "string",
+          "name": "_reason"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "getAlert",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": "_alertId"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "tuple",
+          "name": "",
+          "components": [
+            {
+              "type": "uint256",
+              "name": "id"
+            },
+            {
+              "type": "string",
+              "name": "batchNumber"
+            },
+            {
+              "type": "string",
+              "name": "reason"
+            },
+            {
+              "type": "address",
+              "name": "reportedBy"
+            },
+            {
+              "type": "uint256",
+              "name": "timestamp"
+            },
+            {
+              "type": "bool",
+              "name": "resolved"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getBatchByIndex",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": "_index"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "string",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getMedicine",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_batchNumber"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "tuple",
+          "name": "",
+          "components": [
+            {
+              "type": "uint256",
+              "name": "id"
+            },
+            {
+              "type": "string",
+              "name": "medicineName"
+            },
+            {
+              "type": "string",
+              "name": "batchNumber"
+            },
+            {
+              "type": "string",
+              "name": "manufacturerId"
+            },
+            {
+              "type": "string",
+              "name": "manufacturerName"
+            },
+            {
+              "type": "string",
+              "name": "mfgDate"
+            },
+            {
+              "type": "string",
+              "name": "expiryDate"
+            },
+            {
+              "type": "string",
+              "name": "medicineType"
+            },
+            {
+              "type": "uint256",
+              "name": "quantity"
+            },
+            {
+              "type": "string",
+              "name": "composition"
+            },
+            {
+              "type": "string",
+              "name": "shipmentDest"
+            },
+            {
+              "type": "uint256",
+              "name": "price"
+            },
+            {
+              "type": "uint8",
+              "name": "status"
+            },
+            {
+              "type": "address",
+              "name": "registeredBy"
+            },
+            {
+              "type": "uint256",
+              "name": "registeredAt"
+            },
+            {
+              "type": "uint256",
+              "name": "scanCount"
+            },
+            {
+              "type": "bool",
+              "name": "exists"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getStats",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": "totalMedicines"
+        },
+        {
+          "type": "uint256",
+          "name": "totalVerifications"
+        },
+        {
+          "type": "uint256",
+          "name": "totalAlerts"
+        },
+        {
+          "type": "address",
+          "name": "contractOwner"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getSupplyChain",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_batchNumber"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "tuple[]",
+          "name": "",
+          "components": [
+            {
+              "type": "uint8",
+              "name": "stage"
+            },
+            {
+              "type": "string",
+              "name": "actor"
+            },
+            {
+              "type": "string",
+              "name": "location"
+            },
+            {
+              "type": "uint256",
+              "name": "timestamp"
+            },
+            {
+              "type": "address",
+              "name": "updatedBy"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getTotalBatches",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getVerifications",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_batchNumber"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "tuple[]",
+          "name": "",
+          "components": [
+            {
+              "type": "address",
+              "name": "verifier"
+            },
+            {
+              "type": "uint256",
+              "name": "timestamp"
+            },
+            {
+              "type": "bool",
+              "name": "isAuthentic"
+            },
+            {
+              "type": "string",
+              "name": "details"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "markAsSold",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_batchNumber"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "medicineCount",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "medicines",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": "id"
+        },
+        {
+          "type": "string",
+          "name": "medicineName"
+        },
+        {
+          "type": "string",
+          "name": "batchNumber"
+        },
+        {
+          "type": "string",
+          "name": "manufacturerId"
+        },
+        {
+          "type": "string",
+          "name": "manufacturerName"
+        },
+        {
+          "type": "string",
+          "name": "mfgDate"
+        },
+        {
+          "type": "string",
+          "name": "expiryDate"
+        },
+        {
+          "type": "string",
+          "name": "medicineType"
+        },
+        {
+          "type": "uint256",
+          "name": "quantity"
+        },
+        {
+          "type": "string",
+          "name": "composition"
+        },
+        {
+          "type": "string",
+          "name": "shipmentDest"
+        },
+        {
+          "type": "uint256",
+          "name": "price"
+        },
+        {
+          "type": "uint8",
+          "name": "status"
+        },
+        {
+          "type": "address",
+          "name": "registeredBy"
+        },
+        {
+          "type": "uint256",
+          "name": "registeredAt"
+        },
+        {
+          "type": "uint256",
+          "name": "scanCount"
+        },
+        {
+          "type": "bool",
+          "name": "exists"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "owner",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "address",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "registerMedicine",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_medicineName"
+        },
+        {
+          "type": "string",
+          "name": "_batchNumber"
+        },
+        {
+          "type": "string",
+          "name": "_manufacturerId"
+        },
+        {
+          "type": "string",
+          "name": "_manufacturerName"
+        },
+        {
+          "type": "string",
+          "name": "_mfgDate"
+        },
+        {
+          "type": "string",
+          "name": "_expiryDate"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "setMedicineDetails",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_batchNumber"
+        },
+        {
+          "type": "string",
+          "name": "_medicineType"
+        },
+        {
+          "type": "uint256",
+          "name": "_quantity"
+        },
+        {
+          "type": "string",
+          "name": "_composition"
+        },
+        {
+          "type": "string",
+          "name": "_shipmentDest"
+        },
+        {
+          "type": "uint256",
+          "name": "_price"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "supplyChain",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": ""
+        },
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint8",
+          "name": "stage"
+        },
+        {
+          "type": "string",
+          "name": "actor"
+        },
+        {
+          "type": "string",
+          "name": "location"
+        },
+        {
+          "type": "uint256",
+          "name": "timestamp"
+        },
+        {
+          "type": "address",
+          "name": "updatedBy"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "updateSupplyChain",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_batchNumber"
+        },
+        {
+          "type": "uint8",
+          "name": "_stage"
+        },
+        {
+          "type": "string",
+          "name": "_actor"
+        },
+        {
+          "type": "string",
+          "name": "_location"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "verificationCount",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "verifications",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": ""
+        },
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "address",
+          "name": "verifier"
+        },
+        {
+          "type": "uint256",
+          "name": "timestamp"
+        },
+        {
+          "type": "bool",
+          "name": "isAuthentic"
+        },
+        {
+          "type": "string",
+          "name": "details"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "verifyMedicine",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_batchNumber"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bool",
+          "name": "isAuthentic"
+        },
+        {
+          "type": "string",
+          "name": "details"
+        }
+      ]
+    }
+  ]
+}

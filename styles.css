@@ -1206,8 +1206,23 @@ button {
 
 .qr-reader {
     width: 100%;
+    min-height: 300px;
     border-radius: var(--radius-md);
     overflow: hidden;
+    background: var(--bg-input);
+    border: 2px solid var(--border);
+}
+
+.qr-reader video {
+    width: 100% !important;
+    height: auto !important;
+    border-radius: var(--radius-md);
+}
+
+.scanner-reader video {
+    width: 100% !important;
+    height: auto !important;
+    border-radius: var(--radius-md);
 }
 
 .scanner-status {
@@ -1984,6 +1999,54 @@ button {
     }
 }
 
+/* ===== MetaMask Button ===== */
+.btn-metamask {
+    background: linear-gradient(135deg, #e2761b, #cd6116);
+    color: white;
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: var(--transition);
+    box-shadow: 0 2px 8px rgba(226, 118, 27, 0.2);
+}
+
+.btn-metamask:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(226, 118, 27, 0.3);
+}
+
+.btn-metamask.connected {
+    background: linear-gradient(135deg, #10b981, #059669);
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+}
+
+.btn-metamask.connected:hover {
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+}
+
+/* ===== Spinner ===== */
+.btn-spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: inline-block;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 /* ===== QR Upload Zone ===== */
 .qr-upload-zone {
     display: flex;
@@ -2049,6 +2112,7 @@ button {
     margin-top: 4px;
 }
 
+/* Upload Preview */
 .upload-preview {
     display: flex;
     flex-direction: column;
@@ -2078,6 +2142,7 @@ button {
     margin-top: 8px;
 }
 
+/* Upload Result */
 .upload-result {
     display: flex;
     flex-direction: column;
@@ -2104,6 +2169,7 @@ button {
     max-width: 100%;
 }
 
+/* Scanner Page Upload Button */
 .upload-qr-label {
     cursor: pointer;
     position: relative;
@@ -2113,6 +2179,7 @@ button {
     display: none !important;
 }
 
+/* Scanning animation overlay */
 .upload-scanning-overlay {
     position: absolute;
     inset: 0;
@@ -2140,10 +2207,4 @@ button {
     color: var(--accent-blue);
     font-size: 0.9rem;
     font-weight: 500;
-}
-
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
 }

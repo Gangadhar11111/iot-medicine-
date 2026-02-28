@@ -1,26 +1,37 @@
 /**
- * MediChain — Application Controller
- * Handles UI, QR scanning, navigation, charts, and blockchain interaction.
+ * MediChain — Application Controller (MetaMask + Smart Contract Version)
+ * Handles UI, QR scanning, navigation, charts, and MetaMask/contract interaction.
  */
 
 (function () {
     'use strict';
 
-    const blockchain = window.MediChain;
+    const MM = window.MetaMaskModule;
+    const localBlockchain = window.MediChain; // Fallback
     let html5QrCode = null;
     let scannerPageQr = null;
     let activityChart = null;
     let distributionChart = null;
+    let useSmartContract = false; // Will be true when MetaMask + contract are ready
+
+    // ===== Global Toast (exposed for MetaMask module) =====
+    window.showToast = showToast;
 
     // ===== Initialization =====
     async function init() {
-        await blockchain.initialize();
+        // Initialize local blockchain as fallback
+        await localBlockchain.initialize();
+
+        // Initialize MetaMask module
+        await MM.init();
+        useSmartContract = MM.hasContract && MM.isConnected;
+
         setupNavigation();
         setupEventListeners();
         setupBlockchainListeners();
-        updateDashboard();
+        await updateDashboard();
         initCharts();
-        updateInventoryTable();
+        await updateInventoryTable();
         updateTransactionTable();
         updateAlerts();
         hideLoadingScreen();
@@ -40,8 +51,7 @@
         document.querySelectorAll('.nav-link').forEach(link => {
             link.addEventListener('click', e => {
                 e.preventDefault();
-                const page = link.dataset.page;
-                navigateTo(page);
+                navigateTo(link.dataset.page);
             });
         });
         document.querySelectorAll('.view-all').forEach(link => {
@@ -67,7 +77,6 @@
         };
         document.getElementById('page-title').textContent = titles[page] || page;
         document.getElementById('breadcrumb-current').textContent = titles[page] || page;
-        // Close sidebar on mobile
         document.getElementById('sidebar').classList.remove('open');
     }
 
@@ -76,6 +85,27 @@
         // Sidebar toggle
         document.getElementById('sidebar-toggle').addEventListener('click', () => {
             document.getElementById('sidebar').classList.toggle('open');
+        });
+
+        // MetaMask connect
+        document.getElementById('connect-wallet-btn').addEventListener('click', async () => {
+            if (MM.isConnected) {
+                MM.disconnect();
+                useSmartContract = false;
+                showToast('Wallet disconnected. Using local blockchain.', 'info');
+            } else {
+                const connected = await MM.connectWallet();
+                if (connected) {
+                    useSmartContract = MM.hasContract;
+                    if (useSmartContract) {
+                        showToast('🔗 Connected to MetaMask + Smart Contract!', 'success');
+                    } else {
+                        showToast('MetaMask connected but no contract found. Deploy the contract first.', 'warning');
+                    }
+                    await updateDashboard();
+                    await updateInventoryTable();
+                }
+            }
         });
 
         // Register form
@@ -123,9 +153,7 @@
         document.getElementById('global-search').addEventListener('input', handleSearch);
 
         // Report counterfeit
-        document.getElementById('report-counterfeit').addEventListener('click', () => {
-            showToast('Counterfeit report submitted to authorities', 'warning');
-        });
+        document.getElementById('report-counterfeit').addEventListener('click', handleReportCounterfeit);
 
         // Modal close
         document.getElementById('modal-close').addEventListener('click', closeModal);
@@ -135,26 +163,224 @@
 
         // Notification btn
         document.getElementById('notification-btn').addEventListener('click', () => navigateTo('alerts'));
+
+        // === Upload QR Tab (Verify Page) ===
+        setupUploadQRListeners();
     }
 
-    // ===== Blockchain Event Listeners =====
+    function setupUploadQRListeners() {
+        // --- Verify page: Upload QR file input ---
+        const verifyFileInput = document.getElementById('verify-qr-file-input');
+        if (verifyFileInput) {
+            verifyFileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                showUploadPreview(file);
+            });
+        }
+
+        // --- Verify page: Drag & Drop ---
+        const uploadZone = document.getElementById('verify-upload-zone');
+        if (uploadZone) {
+            ['dragenter', 'dragover'].forEach(evt => {
+                uploadZone.addEventListener(evt, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    uploadZone.classList.add('drag-over');
+                });
+            });
+            ['dragleave', 'drop'].forEach(evt => {
+                uploadZone.addEventListener(evt, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    uploadZone.classList.remove('drag-over');
+                });
+            });
+            uploadZone.addEventListener('drop', (e) => {
+                const file = e.dataTransfer.files[0];
+                if (file && file.type.startsWith('image/')) {
+                    showUploadPreview(file);
+                } else {
+                    showToast('Please drop a valid image file.', 'error');
+                }
+            });
+            // Also allow clicking the zone to trigger file input
+            uploadZone.addEventListener('click', (e) => {
+                if (e.target.closest('.btn')) return; // Don't double-trigger on button click
+                if (verifyFileInput) verifyFileInput.click();
+            });
+        }
+
+        // --- Scan uploaded QR button ---
+        const scanUploadedBtn = document.getElementById('verify-scan-uploaded');
+        if (scanUploadedBtn) {
+            scanUploadedBtn.addEventListener('click', () => {
+                scanUploadedQRImage();
+            });
+        }
+
+        // --- Clear upload button ---
+        const clearUploadBtn = document.getElementById('verify-clear-upload');
+        if (clearUploadBtn) {
+            clearUploadBtn.addEventListener('click', () => {
+                clearUploadPreview();
+            });
+        }
+
+        // --- Scanner page: Upload QR file input ---
+        const scannerFileInput = document.getElementById('scanner-qr-file-input');
+        if (scannerFileInput) {
+            scannerFileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                scanQRFromFile(file, 'scanner-reader');
+            });
+        }
+    }
+
+    // Show preview of uploaded QR image (verify page)
+    let _uploadedFile = null;
+    function showUploadPreview(file) {
+        _uploadedFile = file;
+        const zone = document.getElementById('verify-upload-zone');
+        const preview = document.getElementById('verify-upload-preview');
+        const previewImg = document.getElementById('verify-preview-img');
+        const result = document.getElementById('verify-upload-result');
+
+        // Read image and show preview
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            previewImg.src = e.target.result;
+            zone.classList.add('hidden');
+            preview.classList.remove('hidden');
+            if (result) result.classList.add('hidden');
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function clearUploadPreview() {
+        _uploadedFile = null;
+        const zone = document.getElementById('verify-upload-zone');
+        const preview = document.getElementById('verify-upload-preview');
+        const result = document.getElementById('verify-upload-result');
+        const fileInput = document.getElementById('verify-qr-file-input');
+
+        zone.classList.remove('hidden');
+        preview.classList.add('hidden');
+        if (result) result.classList.add('hidden');
+        if (fileInput) fileInput.value = '';
+    }
+
+    // Scan the uploaded QR image (verify page)
+    async function scanUploadedQRImage() {
+        if (!_uploadedFile) {
+            showToast('No image to scan. Please upload a QR code image.', 'error');
+            return;
+        }
+
+        const preview = document.getElementById('verify-upload-preview');
+        const result = document.getElementById('verify-upload-result');
+        const resultText = document.getElementById('verify-upload-result-text');
+
+        // Show scanning animation
+        const scanningOverlay = document.createElement('div');
+        scanningOverlay.className = 'upload-scanning-overlay';
+        scanningOverlay.innerHTML = '<div class="scan-spinner"></div><span>Scanning QR Code...</span>';
+        preview.style.position = 'relative';
+        preview.appendChild(scanningOverlay);
+
+        try {
+            // Create temp div for scanner
+            let tempDiv = document.getElementById('_temp_qr_upload');
+            if (!tempDiv) {
+                tempDiv = document.createElement('div');
+                tempDiv.id = '_temp_qr_upload';
+                tempDiv.style.display = 'none';
+                document.body.appendChild(tempDiv);
+            }
+
+            const tempScanner = new Html5Qrcode('_temp_qr_upload');
+            const decoded = await tempScanner.scanFile(_uploadedFile, true);
+
+            // Remove scanning overlay
+            scanningOverlay.remove();
+
+            // Show result
+            if (result) {
+                resultText.textContent = 'QR Data: ' + decoded;
+                result.classList.remove('hidden');
+            }
+
+            showToast('✅ QR code detected from image!', 'success');
+
+            // Process the scanned data
+            handleQRData(decoded);
+
+            // Clean up
+            tempScanner.clear();
+            tempDiv.remove();
+        } catch (err) {
+            scanningOverlay.remove();
+            console.error('Upload QR scan failed:', err);
+            showToast('❌ Could not read QR code from image. Try a clearer image.', 'error');
+        }
+    }
+
+    // Scan QR from file (used by scanner page upload button)
+    async function scanQRFromFile(file, containerId) {
+        showToast('📷 Processing QR code image...', 'info');
+
+        try {
+            let tempDiv = document.getElementById('_temp_qr_upload');
+            if (!tempDiv) {
+                tempDiv = document.createElement('div');
+                tempDiv.id = '_temp_qr_upload';
+                tempDiv.style.display = 'none';
+                document.body.appendChild(tempDiv);
+            }
+
+            const tempScanner = new Html5Qrcode('_temp_qr_upload');
+            const decoded = await tempScanner.scanFile(file, true);
+
+            showToast('✅ QR code detected!', 'success');
+            handleQRData(decoded);
+
+            // Add to scan history if on scanner page
+            if (containerId === 'scanner-reader') {
+                addToScanHistory(decoded);
+            }
+
+            // Clean up
+            tempScanner.clear();
+            tempDiv.remove();
+        } catch (err) {
+            console.error('QR file scan failed:', err);
+            showToast('❌ Could not read QR code from image. Try a clearer image.', 'error');
+        }
+
+        // Reset the file input
+        const scannerFileInput = document.getElementById('scanner-qr-file-input');
+        if (scannerFileInput) scannerFileInput.value = '';
+    }
+
+    // ===== Blockchain Event Listeners (local) =====
     function setupBlockchainListeners() {
-        blockchain.on('medicineRegistered', () => {
+        localBlockchain.on('medicineRegistered', () => {
             updateDashboard();
             updateInventoryTable();
             updateTransactionTable();
             updateCharts();
         });
-        blockchain.on('verificationComplete', () => {
+        localBlockchain.on('verificationComplete', () => {
             updateDashboard();
             updateTransactionTable();
             updateCharts();
         });
-        blockchain.on('alertCreated', () => {
+        localBlockchain.on('alertCreated', () => {
             updateAlerts();
             updateDashboard();
         });
-        blockchain.on('blockAdded', (block) => {
+        localBlockchain.on('blockAdded', (block) => {
             updateBlockchainVisual();
             document.getElementById('block-number').textContent = block.index;
             const hash = block.hash;
@@ -178,25 +404,48 @@
                 mfgDate: document.getElementById('mfg-date').value,
                 expiryDate: document.getElementById('exp-date').value,
                 type: document.getElementById('medicine-type').value,
-                quantity: document.getElementById('quantity').value,
+                quantity: parseInt(document.getElementById('quantity').value) || 0,
                 composition: document.getElementById('composition').value.trim(),
                 shipmentDest: document.getElementById('shipment-dest').value.trim(),
-                price: document.getElementById('price').value
+                price: document.getElementById('price').value || '0'
             };
 
             if (!medicineData.medicineName || !medicineData.batchNumber ||
                 !medicineData.manufacturerId || !medicineData.manufacturerName ||
                 !medicineData.mfgDate || !medicineData.expiryDate) {
                 showToast('Please fill in all required fields', 'error');
-                btn.disabled = false;
-                btn.innerHTML = 'Register on Blockchain';
+                resetButton();
                 return;
             }
 
-            const result = await blockchain.registerMedicine(medicineData);
+            let result;
+            if (useSmartContract) {
+                // Use MetaMask + Smart Contract
+                result = await MM.registerMedicine(medicineData);
+                // Also save locally for UI tracking
+                try { await localBlockchain.registerMedicine(medicineData); } catch (e) { }
+            } else {
+                // Use local blockchain
+                result = await localBlockchain.registerMedicine(medicineData);
+                result = {
+                    success: true,
+                    transactionHash: result.transaction.hash,
+                    blockNumber: result.block.index,
+                    batchNumber: medicineData.batchNumber
+                };
+            }
 
-            // Generate QR
-            const qrData = blockchain.generateQRData(medicineData.batchNumber);
+            // Generate QR code
+            const qrData = JSON.stringify({
+                system: 'MediChain',
+                version: '1.0',
+                batch: medicineData.batchNumber,
+                name: medicineData.medicineName,
+                mfg: medicineData.manufacturerId,
+                contract: (MM.hasContract && MM.contract) ? MM.contract.target || 'blockchain' : 'local',
+                block: result.blockNumber
+            });
+
             const qrContainer = document.getElementById('qr-canvas');
             qrContainer.innerHTML = ''; // Clear previous QR
             if (typeof QRCode !== 'undefined') {
@@ -213,25 +462,34 @@
                 console.warn('QRCode library not loaded.');
             }
 
-            // Show QR result
+            // Show results
             document.getElementById('qr-placeholder').classList.add('hidden');
             document.getElementById('qr-result').classList.remove('hidden');
             document.getElementById('qr-med-name').textContent = medicineData.medicineName;
             document.getElementById('qr-batch-id').textContent = medicineData.batchNumber;
 
-            // Show blockchain details
             const regDetails = document.getElementById('registration-details');
             regDetails.classList.remove('hidden');
+            const txHash = result.transactionHash || '';
             document.getElementById('tx-hash').textContent =
-                result.transaction.hash.substring(0, 18) + '...' + result.transaction.hash.substring(result.transaction.hash.length - 8);
-            document.getElementById('reg-block').textContent = '#' + result.block.index;
-            document.getElementById('reg-timestamp').textContent = new Date(result.block.timestamp).toLocaleString();
+                txHash.length > 20 ? txHash.substring(0, 18) + '...' + txHash.substring(txHash.length - 8) : txHash;
+            document.getElementById('reg-block').textContent = '#' + result.blockNumber;
+            document.getElementById('reg-timestamp').textContent = new Date().toLocaleString();
 
-            showToast(`Medicine "${medicineData.medicineName}" registered successfully on Block #${result.block.index}`, 'success');
+            const mode = useSmartContract ? '(Smart Contract via MetaMask)' : '(Local Blockchain)';
+            showToast(`✅ "${medicineData.medicineName}" registered on Block #${result.blockNumber} ${mode}`, 'success');
+
+            await updateDashboard();
+            await updateInventoryTable();
         } catch (err) {
-            showToast(err.message, 'error');
+            showToast('❌ ' + err.message, 'error');
         }
 
+        resetButton();
+    }
+
+    function resetButton() {
+        const btn = document.getElementById('register-btn');
         btn.disabled = false;
         btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="2" y="2" width="20" height="20" rx="4"/><path d="M7 7h10v10H7z"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5"/></svg> Register on Blockchain`;
     }
@@ -251,59 +509,110 @@
     }
 
     async function performVerification(batchNumber) {
-        const result = await blockchain.verifyMedicine(batchNumber);
         const placeholder = document.getElementById('verify-placeholder');
         const successDiv = document.getElementById('verify-success');
         const failDiv = document.getElementById('verify-fail');
-
         placeholder.classList.add('hidden');
 
-        if (result.isAuthentic) {
-            successDiv.classList.remove('hidden');
-            failDiv.classList.add('hidden');
+        try {
+            let result;
 
-            // Render checks
-            const checksDiv = document.getElementById('verification-checks');
-            checksDiv.innerHTML = result.checks.map(c => `
-                <div class="check-item">
-                    <div class="check-icon ${c.passed ? 'pass' : 'fail'}">
-                        ${c.passed
-                    ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>'
-                    : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
+            if (useSmartContract) {
+                result = await MM.verifyMedicine(batchNumber);
+                // Build checks for UI
+                result.checks = [];
+                if (result.isAuthentic) {
+                    result.checks = [
+                        { name: 'Blockchain Record Exists', passed: true, detail: 'Found on smart contract' },
+                        { name: 'Batch Number Matches', passed: true, detail: `Batch: ${batchNumber}` },
+                        { name: 'Medicine Not Expired', passed: true, detail: 'Status: Active' },
+                        { name: 'Not Previously Sold', passed: true, detail: result.medicine ? `Status: ${result.medicine.status}` : 'Active' },
+                        { name: 'Supply Chain Valid', passed: true, detail: 'On-chain verification passed' },
+                        { name: 'Smart Contract Verified', passed: true, detail: `Block #${result.blockNumber}` }
+                    ];
+                } else {
+                    result.checks = [
+                        { name: 'Blockchain Record Exists', passed: !!result.medicine, detail: result.medicine ? 'Found' : 'NOT found' },
+                        { name: 'Smart Contract Check', passed: false, detail: 'Verification failed on-chain' }
+                    ];
                 }
-                    </div>
-                    <span class="check-text">${c.name}</span>
-                    <span class="badge ${c.passed ? 'badge-success' : 'badge-danger'}">${c.passed ? 'PASS' : 'FAIL'}</span>
-                </div>
-            `).join('');
-
-            // Medicine details
-            if (result.medicine) {
-                const m = result.medicine;
-                document.getElementById('verified-medicine-details').innerHTML = `
-                    <h4 style="margin-bottom:12px; font-size:0.9rem;">Medicine Details</h4>
-                    <div class="detail-row"><span class="detail-label">Name</span><span class="detail-value">${m.medicineName}</span></div>
-                    <div class="detail-row"><span class="detail-label">Batch</span><span class="detail-value">${batchNumber}</span></div>
-                    <div class="detail-row"><span class="detail-label">Manufacturer</span><span class="detail-value">${m.manufacturerName || m.manufacturerId}</span></div>
-                    <div class="detail-row"><span class="detail-label">Mfg Date</span><span class="detail-value">${m.mfgDate}</span></div>
-                    <div class="detail-row"><span class="detail-label">Expiry Date</span><span class="detail-value">${m.expiryDate}</span></div>
-                    <div class="detail-row"><span class="detail-label">Type</span><span class="detail-value">${m.type}</span></div>
-                    <div class="detail-row"><span class="detail-label">Scan Count</span><span class="detail-value">${m.scanCount}</span></div>
-                    <div class="detail-row"><span class="detail-label">Block #</span><span class="detail-value">${m.blockNumber}</span></div>
-                `;
+                // Also log locally
+                try { await localBlockchain.verifyMedicine(batchNumber); } catch (e) { }
+            } else {
+                result = await localBlockchain.verifyMedicine(batchNumber);
             }
-            showToast('✓ Medicine verified as AUTHENTIC', 'success');
-        } else {
+
+            if (result.isAuthentic) {
+                successDiv.classList.remove('hidden');
+                failDiv.classList.add('hidden');
+
+                const checksDiv = document.getElementById('verification-checks');
+                checksDiv.innerHTML = (result.checks || []).map(c => `
+                    <div class="check-item">
+                        <div class="check-icon ${c.passed ? 'pass' : 'fail'}">
+                            ${c.passed
+                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>'
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
+                    }
+                        </div>
+                        <span class="check-text">${c.name}</span>
+                        <span class="badge ${c.passed ? 'badge-success' : 'badge-danger'}">${c.passed ? 'PASS' : 'FAIL'}</span>
+                    </div>
+                `).join('');
+
+                const med = result.medicine;
+                if (med) {
+                    document.getElementById('verified-medicine-details').innerHTML = `
+                        <h4 style="margin-bottom:12px; font-size:0.9rem;">Medicine Details</h4>
+                        <div class="detail-row"><span class="detail-label">Name</span><span class="detail-value">${med.medicineName}</span></div>
+                        <div class="detail-row"><span class="detail-label">Batch</span><span class="detail-value">${batchNumber}</span></div>
+                        <div class="detail-row"><span class="detail-label">Manufacturer</span><span class="detail-value">${med.manufacturerName || med.manufacturerId}</span></div>
+                        <div class="detail-row"><span class="detail-label">Mfg Date</span><span class="detail-value">${med.mfgDate}</span></div>
+                        <div class="detail-row"><span class="detail-label">Expiry</span><span class="detail-value">${med.expiryDate}</span></div>
+                        <div class="detail-row"><span class="detail-label">Type</span><span class="detail-value">${med.medicineType || med.type || '-'}</span></div>
+                        <div class="detail-row"><span class="detail-label">Scans</span><span class="detail-value">${med.scanCount || 0}</span></div>
+                        ${result.transactionHash ? `<div class="detail-row"><span class="detail-label">Tx Hash</span><span class="detail-value hash">${result.transactionHash.substring(0, 18)}...</span></div>` : ''}
+                    `;
+                }
+                showToast('✅ Medicine verified as AUTHENTIC', 'success');
+            } else {
+                successDiv.classList.add('hidden');
+                failDiv.classList.remove('hidden');
+                const failedChecks = (result.checks || []).filter(c => !c.passed);
+                document.getElementById('fail-reason').textContent =
+                    failedChecks.map(c => c.detail).join('; ') || 'Verification failed';
+                showToast('⚠️ Warning: Possible Counterfeit Medicine!', 'error');
+            }
+        } catch (err) {
             successDiv.classList.add('hidden');
             failDiv.classList.remove('hidden');
-            const failedChecks = result.checks.filter(c => !c.passed);
-            document.getElementById('fail-reason').textContent =
-                failedChecks.map(c => c.detail).join('; ') || 'Verification failed';
-            showToast('⚠ Warning: Possible Counterfeit Medicine!', 'error');
+            document.getElementById('fail-reason').textContent = err.message;
+            showToast('⚠️ ' + err.message, 'error');
         }
     }
 
-    // ===== QR Scanning (Verify Page) =====
+    // ===== Report Counterfeit =====
+    async function handleReportCounterfeit() {
+        const batch = document.getElementById('verify-batch').value.trim();
+        if (!batch) {
+            showToast('No batch number to report', 'error');
+            return;
+        }
+        try {
+            if (useSmartContract) {
+                await MM.reportCounterfeit(batch, 'Reported as counterfeit by verifier');
+            }
+            await localBlockchain.createAlert(batch, 'Reported as counterfeit by verifier');
+            showToast('🚨 Counterfeit report submitted to blockchain', 'warning');
+        } catch (err) {
+            showToast('Report failed: ' + err.message, 'error');
+        }
+    }
+
+    // ===== QR Scanning =====
+    let lastScannedCode = '';
+    let lastScanTime = 0;
+
     async function startVerifyScanner() {
         try {
             if (typeof Html5Qrcode === 'undefined') {
@@ -312,22 +621,82 @@
             }
             const reader = document.getElementById('qr-reader');
             reader.innerHTML = '';
+            // Ensure the reader has a visible height for the camera
+            reader.style.minHeight = '300px';
             document.getElementById('scanner-status').style.display = 'none';
+
+            // Dispose previous instance if any
+            if (html5QrCode) {
+                try { await html5QrCode.stop(); } catch (e) { }
+                html5QrCode = null;
+            }
+
             html5QrCode = new Html5Qrcode('qr-reader');
-            await html5QrCode.start(
-                { facingMode: 'environment' },
-                { fps: 10, qrbox: { width: 250, height: 250 } },
-                async (decodedText) => {
-                    await stopVerifyScanner();
-                    handleQRData(decodedText);
-                },
-                () => { }
-            );
-            document.getElementById('start-scanner-btn').disabled = true;
-            document.getElementById('stop-scanner-btn').disabled = false;
-            showToast('Camera scanner activated', 'info');
+
+            let started = false;
+            const scannerConfig = { fps: 15, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
+
+            const onScanSuccess = async (decodedText) => {
+                // Debounce: ignore same code within 3 seconds
+                const now = Date.now();
+                if (decodedText === lastScannedCode && now - lastScanTime < 3000) return;
+                lastScannedCode = decodedText;
+                lastScanTime = now;
+                await stopVerifyScanner();
+                handleQRData(decodedText);
+            };
+
+            // First try to get available cameras
+            try {
+                const devices = await Html5Qrcode.getCameras();
+                console.log('Available cameras:', devices);
+                if (devices && devices.length > 0) {
+                    await html5QrCode.start(
+                        devices[0].id,
+                        scannerConfig,
+                        onScanSuccess,
+                        () => { }
+                    );
+                    started = true;
+                    console.log('Camera started with device:', devices[0].label || devices[0].id);
+                }
+            } catch (e) {
+                console.warn('Camera enumeration failed, trying fallback:', e.message);
+            }
+
+            // Fallback: try facingMode configs
+            if (!started) {
+                for (const mode of ['environment', 'user']) {
+                    try {
+                        await html5QrCode.start(
+                            { facingMode: mode },
+                            scannerConfig,
+                            onScanSuccess,
+                            () => { }
+                        );
+                        started = true;
+                        console.log('Camera started with facingMode:', mode);
+                        break;
+                    } catch (e) {
+                        console.warn(`Camera ${mode} failed:`, e.message);
+                    }
+                }
+            }
+
+            if (started) {
+                document.getElementById('start-scanner-btn').disabled = true;
+                document.getElementById('stop-scanner-btn').disabled = false;
+                showToast('📷 Camera scanner activated — point at a QR code', 'success');
+            } else {
+                // Show file upload fallback
+                showFileUploadFallback('qr-reader');
+                showToast('📷 Camera not available. You can upload a QR code image instead.', 'warning');
+                html5QrCode = null;
+            }
         } catch (err) {
-            showToast('Camera access denied or not available: ' + err.message, 'error');
+            console.error('Scanner start error:', err);
+            showFileUploadFallback('qr-reader');
+            showToast('Camera access denied. You can upload a QR code image instead.', 'error');
         }
     }
 
@@ -341,7 +710,6 @@
         document.getElementById('scanner-status').style.display = 'flex';
     }
 
-    // ===== QR Scanning (Scanner Page) =====
     async function startPageScanner() {
         try {
             if (typeof Html5Qrcode === 'undefined') {
@@ -350,25 +718,84 @@
             }
             const reader = document.getElementById('scanner-reader');
             reader.innerHTML = '';
+            reader.style.minHeight = '350px';
             document.getElementById('scanner-overlay').style.display = 'none';
+
+            // Dispose previous instance if any
+            if (scannerPageQr) {
+                try { await scannerPageQr.stop(); } catch (e) { }
+                scannerPageQr = null;
+            }
+
             scannerPageQr = new Html5Qrcode('scanner-reader');
-            await scannerPageQr.start(
-                { facingMode: 'environment' },
-                { fps: 10, qrbox: { width: 250, height: 250 } },
-                async (decodedText) => {
-                    handleQRData(decodedText);
-                    // Don't stop – allow continuous scanning
-                    addToScanHistory(decodedText);
-                },
-                () => { }
-            );
-            document.getElementById('scanner-start').disabled = true;
-            document.getElementById('scanner-stop').disabled = false;
-            document.getElementById('cam-dot').classList.add('active');
-            document.getElementById('cam-status-text').textContent = 'Active';
-            showToast('IoT Camera scanner activated', 'info');
+
+            let started = false;
+            const scannerConfig = { fps: 15, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
+
+            const scanCallback = async (decodedText) => {
+                // Debounce: ignore same code within 3 seconds
+                const now = Date.now();
+                if (decodedText === lastScannedCode && now - lastScanTime < 3000) return;
+                lastScannedCode = decodedText;
+                lastScanTime = now;
+                addToScanHistory(decodedText);
+                handleQRData(decodedText);
+            };
+
+            // Try camera list first
+            try {
+                const devices = await Html5Qrcode.getCameras();
+                console.log('Available cameras:', devices);
+                if (devices && devices.length > 0) {
+                    await scannerPageQr.start(
+                        devices[0].id,
+                        scannerConfig,
+                        scanCallback,
+                        () => { }
+                    );
+                    started = true;
+                    console.log('Page scanner started with device:', devices[0].label || devices[0].id);
+                }
+            } catch (e) {
+                console.warn('Camera list failed:', e.message);
+            }
+
+            // Fallback to facingMode
+            if (!started) {
+                for (const mode of ['environment', 'user']) {
+                    try {
+                        await scannerPageQr.start(
+                            { facingMode: mode },
+                            scannerConfig,
+                            scanCallback,
+                            () => { }
+                        );
+                        started = true;
+                        console.log('Page scanner started with facingMode:', mode);
+                        break;
+                    } catch (e) {
+                        console.warn(`Camera ${mode} failed:`, e.message);
+                    }
+                }
+            }
+
+            if (started) {
+                document.getElementById('scanner-start').disabled = true;
+                document.getElementById('scanner-stop').disabled = false;
+                document.getElementById('cam-dot').classList.add('active');
+                document.getElementById('cam-status-text').textContent = 'Active';
+                showToast('📷 IoT Camera scanner activated — point at a QR code', 'success');
+            } else {
+                // Show file upload fallback on the scanner page
+                showFileUploadFallback('scanner-reader');
+                document.getElementById('scanner-overlay').style.display = 'none';
+                showToast('📷 Camera not available. You can upload a QR code image.', 'warning');
+                scannerPageQr = null;
+            }
         } catch (err) {
-            showToast('Camera access failed: ' + err.message, 'error');
+            console.error('Page scanner start error:', err);
+            showFileUploadFallback('scanner-reader');
+            showToast('Camera failed: ' + err.message, 'error');
         }
     }
 
@@ -382,16 +809,76 @@
         document.getElementById('cam-dot').classList.remove('active');
         document.getElementById('cam-status-text').textContent = 'Inactive';
         document.getElementById('scanner-overlay').style.display = 'flex';
+        // Restore the reader container
+        const reader = document.getElementById('scanner-reader');
+        reader.innerHTML = '';
     }
+
+    // ===== File Upload QR Fallback =====
+    function showFileUploadFallback(containerId) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = `
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;min-height:300px;gap:20px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="64" height="64" style="color:var(--accent-blue);opacity:0.6;">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                <p style="color:var(--text-secondary);font-size:0.95rem;text-align:center;">Camera not available.<br>Upload a QR code image to scan:</p>
+                <label style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:var(--gradient-primary);color:white;border-radius:var(--radius-sm);cursor:pointer;font-weight:600;font-size:0.9rem;box-shadow:0 4px 12px rgba(0,212,255,0.2);transition:all 0.3s ease;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    Choose QR Image
+                    <input type="file" accept="image/*" style="display:none;" onchange="window._handleQRFileUpload(event, '${containerId}')"/>
+                </label>
+                <p style="color:var(--text-muted);font-size:0.8rem;">Supports PNG, JPG, and other image formats</p>
+            </div>
+        `;
+    }
+
+    window._handleQRFileUpload = async function (event, containerId) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        showToast('📷 Processing QR code image...', 'info');
+
+        try {
+            const tempScanner = new Html5Qrcode('_temp_qr_upload');
+            // Create a temp hidden div for the scanner
+            let tempDiv = document.getElementById('_temp_qr_upload');
+            if (!tempDiv) {
+                tempDiv = document.createElement('div');
+                tempDiv.id = '_temp_qr_upload';
+                tempDiv.style.display = 'none';
+                document.body.appendChild(tempDiv);
+            }
+
+            const result = await tempScanner.scanFile(file, true);
+            showToast('✅ QR code detected!', 'success');
+            handleQRData(result);
+
+            // Add to scan history if on scanner page
+            if (containerId === 'scanner-reader') {
+                addToScanHistory(result);
+            }
+
+            // Clean up
+            tempScanner.clear();
+            tempDiv.remove();
+        } catch (err) {
+            console.error('QR file scan failed:', err);
+            showToast('❌ Could not read QR code from image. Try a clearer image.', 'error');
+        }
+    };
 
     async function addToScanHistory(data) {
         let batch = data;
-        try {
-            const parsed = JSON.parse(data);
-            batch = parsed.batch || data;
-        } catch (e) { }
+        try { const parsed = JSON.parse(data); batch = parsed.batch || data; } catch (e) { }
 
-        const result = await blockchain.verifyMedicine(batch);
+        const result = await localBlockchain.verifyMedicine(batch);
         const historyDiv = document.getElementById('scan-history');
         if (historyDiv.querySelector('.empty-state')) historyDiv.innerHTML = '';
 
@@ -412,7 +899,6 @@
         historyDiv.prepend(item);
     }
 
-    // ===== Handle QR Data =====
     async function handleQRData(data) {
         let batchNumber = data;
         try {
@@ -420,9 +906,7 @@
             if (parsed.system === 'MediChain' && parsed.batch) {
                 batchNumber = parsed.batch;
             }
-        } catch (e) {
-            // Plain text batch number
-        }
+        } catch (e) { }
 
         document.getElementById('verify-batch').value = batchNumber;
         await performVerification(batchNumber);
@@ -430,31 +914,40 @@
         document.querySelector('[data-tab="manual"]').click();
     }
 
-    // ===== Dashboard Update =====
-    function updateDashboard() {
-        const stats = blockchain.getStats();
-        animateValue('total-medicines', stats.totalMedicines);
-        animateValue('verified-count', stats.verifiedAuthentic);
-        animateValue('flagged-count', stats.counterfeitAlerts);
-        animateValue('block-count', stats.totalBlocks);
-        document.getElementById('total-txns').textContent = stats.totalTransactions;
+    // ===== Dashboard =====
+    async function updateDashboard() {
+        let stats;
+        if (useSmartContract) {
+            stats = await MM.getStats();
+            stats = {
+                totalMedicines: parseInt(stats.totalMedicines),
+                verifiedAuthentic: parseInt(stats.totalVerifications),
+                counterfeitAlerts: parseInt(stats.totalAlerts),
+                totalBlocks: 0 // We'll get from provider
+            };
+        } else {
+            stats = localBlockchain.getStats();
+        }
 
-        // Update block info
-        if (stats.latestBlock) {
-            document.getElementById('block-number').textContent = stats.latestBlock.index;
-            const hash = stats.latestBlock.hash || '0000000000';
+        animateValue('total-medicines', stats.totalMedicines || 0);
+        animateValue('verified-count', stats.verifiedAuthentic || 0);
+        animateValue('flagged-count', stats.counterfeitAlerts || 0);
+        animateValue('block-count', stats.totalBlocks || localBlockchain.chain.length);
+        document.getElementById('total-txns').textContent = stats.totalTransactions || localBlockchain.transactions.length;
+
+        // Update from local blockchain always
+        const localStats = localBlockchain.getStats();
+        if (localStats.latestBlock) {
+            document.getElementById('block-number').textContent = localStats.latestBlock.index;
+            const hash = localStats.latestBlock.hash || '0000000000';
             document.getElementById('last-hash').textContent = '0x' + hash.substring(0, 6) + '...' + hash.substring(hash.length - 4);
         }
 
-        // Alert count
-        document.getElementById('alert-count').textContent = stats.counterfeitAlerts;
+        document.getElementById('alert-count').textContent = stats.counterfeitAlerts || 0;
         const notifDot = document.getElementById('notification-dot');
-        if (stats.counterfeitAlerts > 0) {
-            notifDot.classList.add('active');
-        }
+        if ((stats.counterfeitAlerts || 0) > 0) notifDot.classList.add('active');
 
-        // Recent transactions
-        renderRecentTransactions(stats.recentTransactions);
+        renderRecentTransactions(localStats.recentTransactions);
         updateBlockchainVisual();
     }
 
@@ -477,7 +970,6 @@
             container.innerHTML = '<div class="empty-state mini"><p>No transactions yet. Register a medicine to get started.</p></div>';
             return;
         }
-
         container.innerHTML = txns.map(tx => {
             const icons = {
                 registration: { cls: 'register', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>' },
@@ -491,7 +983,7 @@
                 <div class="tx-item">
                     <div class="tx-icon ${icon.cls}">${icon.svg}</div>
                     <div class="tx-details">
-                        <div class="tx-title">${tx.type.charAt(0).toUpperCase() + tx.type.slice(1)} — ${tx.data.batchNumber || tx.data.medicineName || ''}</div>
+                        <div class="tx-title">${tx.type.charAt(0).toUpperCase() + tx.type.slice(1)} — ${tx.data.batchNumber || ''}</div>
                         <div class="tx-hash-mini">${hashDisplay}</div>
                     </div>
                     <div class="tx-time">${timeAgo(tx.timestamp)}</div>
@@ -501,20 +993,22 @@
     }
 
     // ===== Inventory Table =====
-    function updateInventoryTable() {
-        const medicines = blockchain.getAllMedicines();
-        const tbody = document.getElementById('inventory-body');
+    async function updateInventoryTable() {
+        let medicines;
+        if (useSmartContract) {
+            medicines = await MM.getAllMedicines();
+        } else {
+            medicines = localBlockchain.getAllMedicines();
+        }
 
-        if (medicines.length === 0) {
+        const tbody = document.getElementById('inventory-body');
+        if (!medicines || medicines.length === 0) {
             tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:40px;">No medicines registered yet</td></tr>';
             return;
         }
 
         tbody.innerHTML = medicines.map(m => {
-            const now = new Date();
-            const exp = new Date(m.expiryDate);
             let status = m.status || 'active';
-            if (exp < now) status = 'expired';
             return `
                 <tr>
                     <td><code style="color:var(--accent-purple);font-size:0.8rem;">${m.batchNumber}</code></td>
@@ -522,10 +1016,8 @@
                     <td>${m.manufacturerName || m.manufacturerId}</td>
                     <td>${m.mfgDate}</td>
                     <td>${m.expiryDate}</td>
-                    <td><span class="status-badge ${status}">${status.toUpperCase()}</span></td>
-                    <td>
-                        <button class="btn btn-sm btn-outline" onclick="window.appVerify('${m.batchNumber}')">Verify</button>
-                    </td>
+                    <td><span class="status-badge ${status.toLowerCase()}">${status.toUpperCase()}</span></td>
+                    <td><button class="btn btn-sm btn-outline" onclick="window.appVerify('${m.batchNumber}')">Verify</button></td>
                 </tr>
             `;
         }).join('');
@@ -534,7 +1026,7 @@
     // ===== Transaction Table =====
     function updateTransactionTable() {
         const filter = document.getElementById('tx-filter').value;
-        let txns = blockchain.transactions.slice().reverse();
+        let txns = localBlockchain.transactions.slice().reverse();
         if (filter !== 'all') txns = txns.filter(t => t.type === filter);
 
         const tbody = document.getElementById('transaction-body');
@@ -558,9 +1050,8 @@
 
     // ===== Alerts =====
     function updateAlerts() {
-        const alerts = blockchain.alerts.slice().reverse();
+        const alerts = localBlockchain.alerts.slice().reverse();
         const container = document.getElementById('alerts-list');
-
         if (alerts.length === 0) {
             container.innerHTML = `<div class="empty-state mini">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48" opacity="0.3"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
@@ -568,7 +1059,6 @@
             </div>`;
             return;
         }
-
         container.innerHTML = alerts.map(a => `
             <div class="alert-item">
                 <div class="alert-icon-wrap">
@@ -583,19 +1073,31 @@
         `).join('');
     }
 
-    // ===== Supply Chain Tracking =====
+    // ===== Supply Chain =====
     async function handleTrackMedicine() {
         const batch = document.getElementById('track-batch').value.trim();
         if (!batch) { showToast('Enter a batch number', 'error'); return; }
 
-        const medicine = blockchain.getMedicine(batch);
-        if (!medicine) { showToast('Medicine not found on blockchain', 'error'); return; }
+        let supplyChainData;
+
+        if (useSmartContract) {
+            supplyChainData = await MM.getSupplyChain(batch);
+        } else {
+            const medicine = localBlockchain.getMedicine(batch);
+            if (!medicine) { showToast('Medicine not found on blockchain', 'error'); return; }
+            supplyChainData = medicine.supplyChain;
+        }
+
+        if (!supplyChainData || supplyChainData.length === 0) {
+            showToast('No supply chain data found', 'error');
+            return;
+        }
 
         const resultCard = document.getElementById('supply-chain-result');
         resultCard.style.display = 'block';
         const timeline = document.getElementById('supply-timeline');
 
-        timeline.innerHTML = medicine.supplyChain.map((step, i) => `
+        timeline.innerHTML = supplyChainData.map((step, i) => `
             <div class="timeline-item" style="animation-delay: ${i * 0.15}s;">
                 <div class="timeline-dot"></div>
                 <div class="timeline-content">
@@ -611,7 +1113,7 @@
     // ===== Blockchain Visual =====
     function updateBlockchainVisual() {
         const container = document.getElementById('blockchain-visual');
-        const blocks = blockchain.chain.slice(-6);
+        const blocks = localBlockchain.chain.slice(-6);
         container.innerHTML = blocks.map((block, i) => {
             const isGenesis = block.index === 0;
             const hash = block.hash || '0000000000';
@@ -634,19 +1136,13 @@
                 data: {
                     labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
                     datasets: [{
-                        label: 'Registrations',
-                        data: [2, 4, 3, 5, 7, 4, 6],
-                        borderColor: '#00d4ff',
-                        backgroundColor: 'rgba(0,212,255,0.1)',
-                        fill: true, tension: 0.4, pointRadius: 4,
-                        pointBackgroundColor: '#00d4ff'
+                        label: 'Registrations', data: [2, 4, 3, 5, 7, 4, 6],
+                        borderColor: '#00d4ff', backgroundColor: 'rgba(0,212,255,0.1)',
+                        fill: true, tension: 0.4, pointRadius: 4, pointBackgroundColor: '#00d4ff'
                     }, {
-                        label: 'Verifications',
-                        data: [5, 8, 6, 9, 12, 8, 10],
-                        borderColor: '#10b981',
-                        backgroundColor: 'rgba(16,185,129,0.1)',
-                        fill: true, tension: 0.4, pointRadius: 4,
-                        pointBackgroundColor: '#10b981'
+                        label: 'Verifications', data: [5, 8, 6, 9, 12, 8, 10],
+                        borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)',
+                        fill: true, tension: 0.4, pointRadius: 4, pointBackgroundColor: '#10b981'
                     }]
                 },
                 options: {
@@ -659,7 +1155,6 @@
                 }
             });
         }
-
         const distCtx = document.getElementById('distribution-chart');
         if (distCtx) {
             distributionChart = new Chart(distCtx, {
@@ -673,8 +1168,7 @@
                     }]
                 },
                 options: {
-                    responsive: true, maintainAspectRatio: false,
-                    cutout: '70%',
+                    responsive: true, maintainAspectRatio: false, cutout: '70%',
                     plugins: { legend: { position: 'bottom', labels: { color: '#8892b0', padding: 16, font: { family: 'Inter' } } } }
                 }
             });
@@ -682,7 +1176,7 @@
     }
 
     function updateCharts() {
-        const medicines = blockchain.getAllMedicines();
+        const medicines = localBlockchain.getAllMedicines();
         if (distributionChart && medicines.length > 0) {
             const types = {};
             medicines.forEach(m => { types[m.type] = (types[m.type] || 0) + 1; });
@@ -692,27 +1186,28 @@
         }
     }
 
-    // ===== Download QR =====
+    // ===== QR Download/Print =====
     function downloadQR() {
         const qrContainer = document.getElementById('qr-canvas');
-        const canvas = qrContainer.querySelector('canvas');
-        if (!canvas) { showToast('No QR code to download', 'error'); return; }
+        const img = qrContainer.querySelector('img') || qrContainer.querySelector('canvas');
+        if (!img) { showToast('No QR code to download', 'error'); return; }
         const link = document.createElement('a');
         link.download = `MediChain_QR_${document.getElementById('qr-batch-id').textContent}.png`;
-        link.href = canvas.toDataURL();
+        link.href = img.src || img.toDataURL();
         link.click();
         showToast('QR Code downloaded', 'success');
     }
 
     function printQR() {
         const qrContainer = document.getElementById('qr-canvas');
-        const canvas = qrContainer.querySelector('canvas');
-        if (!canvas) { showToast('No QR code to print', 'error'); return; }
+        const img = qrContainer.querySelector('img') || qrContainer.querySelector('canvas');
+        if (!img) return;
+        const imgSrc = img.src || img.toDataURL();
         const w = window.open('');
         w.document.write(`<html><head><title>MediChain QR</title></head><body style="text-align:center;padding:40px;">
             <h2>${document.getElementById('qr-med-name').textContent}</h2>
             <p>${document.getElementById('qr-batch-id').textContent}</p>
-            <img src="${canvas.toDataURL()}" style="width:300px;"/><br>
+            <img src="${imgSrc}" style="width:300px;"/><br>
             <p style="color:#888;font-size:12px;">Verified by MediChain Blockchain</p>
             <script>window.print();<\/script></body></html>`);
     }
@@ -721,44 +1216,32 @@
     function handleSearch(e) {
         const query = e.target.value.trim();
         if (query.length < 2) return;
-        const results = blockchain.search(query);
-        if (results.length > 0) {
-            showToast(`Found ${results.length} result(s) for "${query}"`, 'info');
-        }
+        const results = localBlockchain.search(query);
+        if (results.length > 0) showToast(`Found ${results.length} result(s) for "${query}"`, 'info');
     }
 
-    // ===== Toast Notifications =====
+    // ===== Toast =====
     function showToast(message, type = 'info') {
         const container = document.getElementById('toast-container');
         const toast = document.createElement('div');
         toast.className = `toast ${type}`;
-
         const icons = {
             success: '<svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" width="20" height="20"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>',
             error: '<svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" width="20" height="20"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
             warning: '<svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" width="20" height="20"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg>',
             info: '<svg viewBox="0 0 24 24" fill="none" stroke="#00d4ff" stroke-width="2" width="20" height="20"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
         };
-
         toast.innerHTML = `
             <div class="toast-icon">${icons[type] || icons.info}</div>
             <div class="toast-message">${message}</div>
             <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
         `;
-
         container.appendChild(toast);
-        setTimeout(() => {
-            toast.classList.add('fade-out');
-            setTimeout(() => toast.remove(), 300);
-        }, 4000);
+        setTimeout(() => { toast.classList.add('fade-out'); setTimeout(() => toast.remove(), 300); }, 4000);
     }
 
-    // ===== Modal =====
-    function closeModal() {
-        document.getElementById('modal-overlay').classList.add('hidden');
-    }
+    function closeModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
 
-    // ===== Utility =====
     function timeAgo(dateStr) {
         const seconds = Math.floor((new Date() - new Date(dateStr)) / 1000);
         if (seconds < 60) return 'Just now';
@@ -767,13 +1250,12 @@
         return Math.floor(seconds / 86400) + 'd ago';
     }
 
-    // ===== Global Handlers =====
+    // Globals
     window.appVerify = function (batch) {
         document.getElementById('verify-batch').value = batch;
         navigateTo('verify');
         performVerification(batch);
     };
 
-    // ===== Start App =====
     document.addEventListener('DOMContentLoaded', init);
 })();

@@ -22,6 +22,9 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
+    <!-- Ethers.js for MetaMask / Blockchain -->
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.9.0/dist/ethers.umd.min.js"></script>
+
     <link rel="stylesheet" href="styles.css">
 </head>
 
@@ -196,6 +199,14 @@
                         <input type="text" placeholder="Search medicines, batches..." id="global-search">
                     </div>
                     <div class="topbar-actions">
+                        <button class="btn btn-metamask" id="connect-wallet-btn" title="Connect MetaMask">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                <path d="M9 12l2 2 4-4" />
+                            </svg>
+                            <span id="wallet-btn-text">Connect Wallet</span>
+                        </button>
                         <button class="icon-btn" id="theme-toggle" title="Toggle Theme">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="12" cy="12" r="5" />
@@ -211,12 +222,12 @@
                             <span class="notification-dot" id="notification-dot"></span>
                         </button>
                         <div class="user-profile" id="user-profile">
-                            <div class="user-avatar">
-                                <span>M</span>
+                            <div class="user-avatar" id="wallet-avatar">
+                                <span id="wallet-avatar-letter">?</span>
                             </div>
                             <div class="user-info">
-                                <span class="user-name">Manufacturer</span>
-                                <span class="user-role">Admin</span>
+                                <span class="user-name" id="wallet-display">Not Connected</span>
+                                <span class="user-role" id="wallet-role">Connect MetaMask</span>
                             </div>
                         </div>
                     </div>
@@ -682,7 +693,9 @@
                                                     </svg>
                                                     Scan This QR Code
                                                 </button>
-                                                <button class="btn btn-outline" id="verify-clear-upload">Clear</button>
+                                                <button class="btn btn-outline" id="verify-clear-upload">
+                                                    Clear
+                                                </button>
                                             </div>
                                         </div>
                                         <div class="upload-result hidden" id="verify-upload-result">
@@ -982,6 +995,7 @@
     </div>
 
     <script src="blockchain.js"></script>
+    <script src="metamask.js"></script>
     <script src="app.js"></script>
 </body>
 
