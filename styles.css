@@ -1217,12 +1217,24 @@ button {
     width: 100% !important;
     height: auto !important;
     border-radius: var(--radius-md);
+    transform: scaleX(1) !important;
+    -webkit-transform: scaleX(1) !important;
 }
 
 .scanner-reader video {
     width: 100% !important;
     height: auto !important;
     border-radius: var(--radius-md);
+    transform: scaleX(1) !important;
+    -webkit-transform: scaleX(1) !important;
+}
+
+/* Ensure no mirror effect on any scanner video */
+#qr-reader video,
+#scanner-reader video,
+#qr-reader__scan_region video {
+    transform: scaleX(1) !important;
+    -webkit-transform: scaleX(1) !important;
 }
 
 .scanner-status {

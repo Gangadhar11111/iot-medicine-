@@ -634,7 +634,7 @@
             html5QrCode = new Html5Qrcode('qr-reader');
 
             let started = false;
-            const scannerConfig = { fps: 15, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
+            const scannerConfig = { fps: 15, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0, disableFlip: false };
 
             const onScanSuccess = async (decodedText) => {
                 // Debounce: ignore same code within 3 seconds
@@ -730,7 +730,7 @@
             scannerPageQr = new Html5Qrcode('scanner-reader');
 
             let started = false;
-            const scannerConfig = { fps: 15, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
+            const scannerConfig = { fps: 15, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0, disableFlip: false };
 
             const scanCallback = async (decodedText) => {
                 // Debounce: ignore same code within 3 seconds
