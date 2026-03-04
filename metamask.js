@@ -97,6 +97,7 @@ window.MetaMaskModule = (function () {
             updateWalletUI();
 
             // Auto-authorize this wallet via backend (owner signs the tx)
+            let authorized = false;
             try {
                 const authRes = await fetch(API_BASE + '/api/authorize', {
                     method: 'POST',
@@ -105,15 +106,20 @@ window.MetaMaskModule = (function () {
                 });
                 const authData = await authRes.json();
                 if (authData.success) {
+                    authorized = true;
                     if (authData.alreadyAuthorized) {
                         console.log('✅ Wallet already authorized');
                     } else {
                         console.log('✅ Wallet authorized as:', authData.roles?.join(', '));
                         if (!silent) showWalletToast('🔑 Wallet authorized as Manufacturer, Distributor & Shop', 'success');
                     }
+                } else {
+                    console.warn('Authorization response error:', authData.error);
+                    if (!silent) showWalletToast('⚠️ Wallet authorization pending — registration will use server fallback', 'warning');
                 }
             } catch (e) {
-                console.warn('Auto-authorize skipped:', e.message);
+                console.warn('Auto-authorize failed:', e.message);
+                if (!silent) showWalletToast('⚠️ Could not auto-authorize wallet — server may handle registration', 'warning');
             }
 
             if (!silent) {
@@ -256,6 +262,75 @@ window.MetaMaskModule = (function () {
             };
         } catch (err) {
             console.error('Register error:', err);
+            const errorMsg = (err.reason || err.message || '').toLowerCase();
+
+            // If not authorized, try to auto-authorize and retry
+            if (errorMsg.includes('not an authorized manufacturer') || errorMsg.includes('not authorized')) {
+                console.log('🔑 Wallet not authorized. Attempting auto-authorization...');
+                showWalletToast('🔑 Authorizing your wallet... Please wait.', 'info');
+
+                try {
+                    // Ask the backend (contract owner) to authorize this wallet
+                    const authRes = await fetch(API_BASE + '/api/authorize', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ address: userAddress })
+                    });
+                    const authData = await authRes.json();
+
+                    if (authData.success) {
+                        showWalletToast('✅ Wallet authorized! Retrying registration...', 'success');
+
+                        // Retry the registration via MetaMask
+                        try {
+                            const tx = await contract.registerMedicine(
+                                data.medicineName,
+                                data.batchNumber,
+                                data.manufacturerId,
+                                data.manufacturerName,
+                                data.mfgDate,
+                                data.expiryDate
+                            );
+
+                            showWalletToast('Transaction submitted. Mining...', 'info');
+                            const receipt = await tx.wait();
+
+                            // Set additional details
+                            try {
+                                const tx2 = await contract.setMedicineDetails(
+                                    data.batchNumber,
+                                    data.type || 'tablet',
+                                    data.quantity || 0,
+                                    data.composition || '',
+                                    data.shipmentDest || '',
+                                    Math.floor(parseFloat(data.price || 0))
+                                );
+                                await tx2.wait();
+                            } catch (e) {
+                                console.warn('Optional details TX failed:', e.message);
+                            }
+
+                            return {
+                                success: true,
+                                transactionHash: receipt.hash,
+                                blockNumber: receipt.blockNumber,
+                                batchNumber: data.batchNumber,
+                                from: userAddress
+                            };
+                        } catch (retryErr) {
+                            console.warn('MetaMask retry failed, falling back to server API:', retryErr.message);
+                        }
+                    }
+                } catch (authErr) {
+                    console.warn('Auto-authorization failed:', authErr.message);
+                }
+
+                // Final fallback: use server API (owner's key signs the tx)
+                console.log('📡 Falling back to server API for registration...');
+                showWalletToast('📡 Registering via server (owner key)...', 'info');
+                return await apiCall('/api/medicine/register', 'POST', data);
+            }
+
             throw new Error(err.reason || err.message || 'Registration failed');
         }
     }
